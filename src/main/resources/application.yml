@@ -1,6 +1,27 @@
 spring:
   application:
     name: crewvoice
+  mvc:
+    log-request-details: true
+
+  # Redis 설정
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      timeout: 60000  # 연결 타임아웃 (ms)
+      lettuce:
+        pool:
+          max-active: 8  # 최대 연결 수
+          max-idle: 8    # 최대 유휴 연결 수
+          min-idle: 0    # 최소 유휴 연결 수
+          max-wait: -1ms # 최대 대기 시간
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
   # datasource:
   #   url: jdbc:postgresql://localhost:5432/crewvoice_db
@@ -36,3 +57,4 @@ logging:
   level:
     org.springframework: INFO
     org.skala.crewvoice: DEBUG
+    org.springframework.web.servlet.DispatcherServlet: DEBUG

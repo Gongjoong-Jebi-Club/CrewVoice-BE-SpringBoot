@@ -1,0 +1,73 @@
+spring:
+  application:
+    name: crewvoice
+  mvc:
+    log-request-details: true
+
+  # Redis 설정
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      timeout: 60000  # 연결 타임아웃 (ms)
+      lettuce:
+        pool:
+          max-active: 8  # 최대 연결 수
+          max-idle: 8    # 최대 유휴 연결 수
+          min-idle: 0    # 최소 유휴 연결 수
+          max-wait: -1ms # 최대 대기 시간
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  cloud:
+    aws:
+      credentials:
+        accessKey: ${AWS_ACCESS_KEY_ID}
+        secretKey: ${AWS_SECRET_ACCESS_KEY}
+      region:
+        static: ap-northeast-2
+      stack:
+        auto: false
+      s3:
+        bucket: ${S3_BUCKET_NAME}
+
+  datasource:
+     url: jdbc:postgresql://${DB_HOST}:5432/${DB_NAME}
+     username: ${DB_USERNAME}
+     password: ${DB_PASSWORD}
+     driver-class-name: org.postgresql.Driver
+
+  jpa:
+     hibernate:
+       ddl-auto: update
+     properties:
+       hibernate:
+         dialect: org.hibernate.dialect.PostgreSQLDialect
+         format_sql: true
+     show-sql: true
+
+server:
+  port: 8080
+
+# Swagger/OpenAPI 설정
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+    doc-expansion: none
+  show-actuator: false
+
+logging:
+  level:
+    org.springframework: INFO
+    org.skala.crewvoice: DEBUG
+    org.springframework.web.servlet.DispatcherServlet: DEBUG

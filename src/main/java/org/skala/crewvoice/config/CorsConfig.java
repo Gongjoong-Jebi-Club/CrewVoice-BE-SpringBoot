@@ -20,12 +20,7 @@ public class CorsConfig {
         config.setAllowCredentials(true);
 
         // 허용할 Origin 설정
-        config.setAllowedOrigins(Arrays.asList(
-                "https://crew-voice-client-vercel.vercel.app",
-                "http://localhost:3000",  // 로컬 개발용
-                "http://localhost:5173",  // Vite 개발용
-                "http://localhost:8000"
-        ));
+        config.setAllowedOrigins(Arrays.asList("*"));
 
         // 허용할 헤더
         config.setAllowedHeaders(Arrays.asList(

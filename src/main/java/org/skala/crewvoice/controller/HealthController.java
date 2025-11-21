@@ -18,11 +18,10 @@ public class HealthController {
             summary = "서버 상태 확인",
             description = "API 서버가 정상적으로 작동하는지 확인합니다."
     )
-    @GetMapping("/health")
+    @GetMapping("/hello-world")
     public Map<String, String> healthCheck() {
         Map<String, String> response = new HashMap<>();
-        response.put("status", "UP");
-        response.put("message", "CrewVoice API is running!");
+        response.put("message", "Hello World");
         return response;
     }
 }

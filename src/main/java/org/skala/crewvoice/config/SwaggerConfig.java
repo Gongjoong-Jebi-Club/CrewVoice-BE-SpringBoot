@@ -15,6 +15,10 @@ public class SwaggerConfig {
 
     @Bean
     public OpenAPI crewVoiceOpenAPI() {
+        Server prodServer = new Server();
+        prodServer.setUrl("https://server.crewvoice.cloud");
+        prodServer.setDescription("Production Server");
+
         Server localServer = new Server();
         localServer.setUrl("http://localhost:8080");
         localServer.setDescription("Local Development Server");
@@ -32,6 +36,6 @@ public class SwaggerConfig {
 
         return new OpenAPI()
                 .info(info)
-                .servers(List.of(localServer));
+                .servers(List.of(prodServer, localServer));
     }
 }

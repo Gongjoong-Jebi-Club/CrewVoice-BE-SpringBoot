@@ -19,8 +19,8 @@ public class CorsConfig {
         // 자격 증명 허용
         config.setAllowCredentials(true);
 
-        // 허용할 Origin 설정
-        config.setAllowedOrigins(Arrays.asList("*"));
+        // 허용할 Origin 설정 (allowCredentials=true일 때는 originPatterns 사용)
+        config.setAllowedOriginPatterns(Arrays.asList("*"));
 
         // 허용할 헤더
         config.setAllowedHeaders(Arrays.asList(

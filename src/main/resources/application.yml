@@ -71,3 +71,9 @@ logging:
     org.springframework: INFO
     org.skala.crewvoice: DEBUG
     org.springframework.web.servlet.DispatcherServlet: DEBUG
+
+security:
+  jwt:
+    token:
+      secret-key: ${BASE64_SECRET_KEY}
+      expire-length: 3600000 # 1 hour

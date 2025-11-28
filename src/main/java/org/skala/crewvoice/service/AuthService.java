@@ -1,8 +1,11 @@
 package org.skala.crewvoice.service;
 
 import org.skala.crewvoice.domain.User;
-import org.skala.crewvoice.dto.LoginRequest;
-import org.skala.crewvoice.dto.SignUpRequest;
+import org.skala.crewvoice.domain.UserStatus;
+import org.skala.crewvoice.dto.request.LoginRequest;
+import org.skala.crewvoice.dto.request.SignUpRequest;
+import org.skala.crewvoice.dto.response.LoginResponse;
+import org.skala.crewvoice.dto.response.SignUpResponse;
 import org.skala.crewvoice.repository.UserRepository;
 import org.skala.crewvoice.util.JwtTokenProvider;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,20 +30,26 @@ public class AuthService implements UserDetailsService {
     }
 
     @Transactional
-    public void signUp(SignUpRequest signUpRequest) {
+    public SignUpResponse signUp(SignUpRequest signUpRequest) {
         if (userRepository.findByEmail(signUpRequest.getEmail()).isPresent()) {
             throw new IllegalArgumentException("이미 가입된 이메일입니다.");
         }
 
         User user = new User(
+                signUpRequest.getName(),
+                signUpRequest.getEmployeeId(),
                 signUpRequest.getEmail(),
                 passwordEncoder.encode(signUpRequest.getPassword()),
-                signUpRequest.getName()
+                signUpRequest.getRole(),
+                signUpRequest.getGender(),
+                false, // is_mock_exam 기본값: false
+                UserStatus.ACTIVE // status 기본값: ACTIVE
         );
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        return new SignUpResponse(savedUser.getId());
     }
 
-    public String login(LoginRequest loginRequest) {
+    public LoginResponse login(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
 
@@ -48,7 +57,8 @@ public class AuthService implements UserDetailsService {
             throw new IllegalArgumentException("잘못된 비밀번호입니다.");
         }
 
-        return jwtTokenProvider.createToken(user.getEmail());
+        String token = jwtTokenProvider.createToken(user.getEmail());
+        return new LoginResponse(token);
     }
 
     @Override

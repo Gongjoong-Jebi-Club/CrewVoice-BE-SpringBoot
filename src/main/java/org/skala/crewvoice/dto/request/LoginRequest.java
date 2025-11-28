@@ -1,12 +1,11 @@
-package org.skala.crewvoice.dto;
+package org.skala.crewvoice.dto.request;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class SignUpRequest {
+public class LoginRequest {
     private String email;
     private String password;
-    private String name;
 }

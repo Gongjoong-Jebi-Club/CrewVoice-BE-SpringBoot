@@ -14,11 +14,17 @@ import java.util.Collections;
 @Table(name = "users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User implements UserDetails {
+public class User extends BaseTimeEntity implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(name = "employee_id", nullable = false, unique = true)
+    private String employeeId;
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -27,12 +33,27 @@ public class User implements UserDetails {
     private String password;
 
     @Column(nullable = false)
-    private String name;
+    private String role;
 
-    public User(String email, String password, String name) {
+    @Column(nullable = false, length = 1)
+    private String gender;
+
+    @Column(name = "is_mock_exam", nullable = false)
+    private boolean isMockExam;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserStatus status;
+
+    public User(String name, String employeeId, String email, String password, String role, String gender, boolean isMockExam, UserStatus status) {
+        this.name = name;
+        this.employeeId = employeeId;
         this.email = email;
         this.password = password;
-        this.name = name;
+        this.role = role;
+        this.gender = gender;
+        this.isMockExam = isMockExam;
+        this.status = status;
     }
 
     @Override
@@ -62,6 +83,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        // 사용자의 상태가 ACTIVE일 때만 계정이 활성화되도록 수정
+        return this.status == UserStatus.ACTIVE;
     }
 }

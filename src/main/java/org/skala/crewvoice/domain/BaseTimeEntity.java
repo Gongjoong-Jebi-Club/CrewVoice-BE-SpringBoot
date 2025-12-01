@@ -8,7 +8,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 /**
  * 모든 Entity의 생성일시와 수정일시를 자동으로 관리하는 추상 클래스
@@ -44,17 +44,20 @@ import java.time.LocalDateTime;
 public abstract class BaseTimeEntity {
 
     /**
-     * 엔티티 생성 일시
+     * 엔티티 생성 일시 (UTC)
      * Entity가 처음 저장될 때 자동으로 현재 시간이 설정됩니다.
+     * timestamptz 타입과 호환됩니다.
      */
     @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
+    @Column(updatable = false, columnDefinition = "TIMESTAMPTZ")
+    private OffsetDateTime createdAt;
 
     /**
-     * 엔티티 최종 수정 일시
+     * 엔티티 최종 수정 일시 (UTC)
      * Entity가 수정될 때마다 자동으로 현재 시간으로 갱신됩니다.
+     * timestamptz 타입과 호환됩니다.
      */
     @LastModifiedDate
-    private LocalDateTime updatedAt;
+    @Column(columnDefinition = "TIMESTAMPTZ")
+    private OffsetDateTime updatedAt;
 }

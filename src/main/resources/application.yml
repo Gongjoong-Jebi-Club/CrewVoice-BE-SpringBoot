@@ -56,8 +56,6 @@ server:
 
 # Swagger/OpenAPI 설정
 springdoc:
-  api-docs:
-    path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
     tags-sorter: alpha
@@ -71,3 +69,10 @@ logging:
     org.springframework: INFO
     org.skala.crewvoice: DEBUG
     org.springframework.web.servlet.DispatcherServlet: DEBUG
+
+security:
+  jwt:
+    token:
+      secret-key: ${BASE64_SECRET_KEY}
+      access-expire-length: 3600000 # 1 hour
+      refresh-expire-length: 1209600000 # 2 weeks

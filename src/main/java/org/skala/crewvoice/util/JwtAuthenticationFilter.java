@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
+import org.skala.crewvoice.service.RedisService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,7 +22,8 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserDetailsService userDetailsService;
+    private final RedisService redisService;
+    private final UserDetailsService userDetailsService; // UserDetailsService 주입
 
     @Override
     protected void doFilterInternal(
@@ -32,10 +34,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = resolveToken(request);
 
         if (token != null && jwtTokenProvider.validateToken(token)) {
-            String email = jwtTokenProvider.getSubject(token);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            // 블랙리스트 확인
+            if (redisService.get("blacklist:" + token) == null) {
+                // 토큰에서 사용자 정보(이메일)를 가져와 인증 객체 생성
+                String email = jwtTokenProvider.getSubject(token);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         }
         filterChain.doFilter(request, response);
     }

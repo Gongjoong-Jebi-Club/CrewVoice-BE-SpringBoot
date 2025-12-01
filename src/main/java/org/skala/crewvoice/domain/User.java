@@ -18,6 +18,7 @@ public class User extends BaseTimeEntity implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id", nullable = false, unique = true)
     private Long id;
 
     @Column(nullable = false)
@@ -85,5 +86,9 @@ public class User extends BaseTimeEntity implements UserDetails {
     public boolean isEnabled() {
         // 사용자의 상태가 ACTIVE일 때만 계정이 활성화되도록 수정
         return this.status == UserStatus.ACTIVE;
+    }
+
+    public void delete() {
+        this.status = UserStatus.INACTIVE;
     }
 }

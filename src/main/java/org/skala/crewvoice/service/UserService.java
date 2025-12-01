@@ -35,6 +35,9 @@ public class UserService {
     }
 
     public List<UserResponse> searchUsers(String keyword, String role) {
+        if ((keyword == null || keyword.isBlank()) && (role == null || role.isBlank())) {
+            return getAllActiveUsers();
+        }
         return userRepository.searchUsers(keyword, role, UserStatus.ACTIVE)
                 .stream()
                 .map(UserResponse::from)

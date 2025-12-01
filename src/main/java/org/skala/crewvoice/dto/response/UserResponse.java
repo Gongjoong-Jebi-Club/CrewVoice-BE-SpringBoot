@@ -1,11 +1,10 @@
 package org.skala.crewvoice.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.skala.crewvoice.domain.UserStatus;
+import org.skala.crewvoice.domain.User;
 
 import java.time.OffsetDateTime;
 
@@ -14,26 +13,21 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 public class UserResponse {
     private Long userId;
-
-    @JsonProperty("username")
     private String name;
-
     private String employeeId;
     private String email;
     private String role;
-    private UserStatus status;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd")
     private OffsetDateTime createdAt;
 
-    public static UserResponse from(org.skala.crewvoice.domain.User user) {
+    public static UserResponse from(User user) {
         return new UserResponse(
                 user.getId(),
                 user.getName(),
                 user.getEmployeeId(),
                 user.getEmail(),
                 user.getRole(),
-                user.getStatus(),
                 user.getCreatedAt()
         );
     }

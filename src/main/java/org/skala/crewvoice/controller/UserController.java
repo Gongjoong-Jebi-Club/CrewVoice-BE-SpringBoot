@@ -26,7 +26,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @Operation(summary = "사용자 검색 및 조회", description = "서비스 운영자가 사용자 관리 페이지에서 키워드(이름, 사번, 이메일)와 역할로 ACTIVE 상태의 사용자를 검색합니다.")
+    @Operation(summary = "전체 사용자 조회 및 검색", description = "서비스 운영자가 사용자 관리 페이지에서 전체 사용자를 조회하거나, 키워드(이름, 사번, 이메일)와 역할로 ACTIVE 상태의 사용자를 검색합니다. 검색 조건이 없으면 전체 활성 사용자를 반환합니다.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "사용자 조회 성공",
                     content = @Content(schema = @Schema(implementation = ApiResponse.class))),

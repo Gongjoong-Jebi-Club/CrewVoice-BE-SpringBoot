@@ -91,4 +91,8 @@ public class User extends BaseTimeEntity implements UserDetails {
     public void delete() {
         this.status = UserStatus.INACTIVE;
     }
+
+    public void resetPassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 }

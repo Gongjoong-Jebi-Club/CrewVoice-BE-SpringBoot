@@ -77,7 +77,7 @@ public class AuthService implements UserDetailsService {
         // Redis에 Refresh Token 저장
         redisService.set("RT:" + user.getEmail(), refreshToken, refreshTokenValidityInMilliseconds, TimeUnit.MILLISECONDS);
 
-        return new LoginResponse(accessToken, refreshToken);
+        return new LoginResponse(accessToken, refreshToken, user.getRole());
     }
 
     @Transactional

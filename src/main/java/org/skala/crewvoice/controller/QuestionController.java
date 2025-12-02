@@ -40,7 +40,7 @@ public class QuestionController {
     })
     @GetMapping("/step2/{pageNumber}")
     public ResponseEntity<ApiResponse<List<QuestionResponse>>> getStep2Questions(@PathVariable int pageNumber) {
-        List<QuestionResponse> questions = questionService.getStep2Questions(pageNumber);
+        List<QuestionResponse> questions = questionStep2Service.getStep2Questions(pageNumber);
         ApiResponse<List<QuestionResponse>> response = ApiResponse.success(questions);
         return ResponseEntity.ok(response);
     }

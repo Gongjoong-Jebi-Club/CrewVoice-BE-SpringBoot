@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.skala.crewvoice.dto.request.LoginRequest;
-import org.skala.crewvoice.dto.request.RefreshTokenRequest;
 import org.skala.crewvoice.dto.request.SignUpRequest;
 import org.skala.crewvoice.dto.response.ApiResponse;
 import org.skala.crewvoice.dto.response.LoginResponse;
@@ -72,7 +71,7 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
-    @Operation(summary = "토큰 재발급", description = "Refresh Token을 사용하여 새로운 Access Token을 발급받습니다.")
+    @Operation(summary = "토큰 재발급", description = "Authorization 헤더의 만료된 Access Token에서 사용자 정보를 파악하여 새로운 Access Token을 발급받습니다.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "토큰 재발급 성공",
                     content = @Content(schema = @Schema(implementation = ApiResponse.class))),
@@ -80,8 +79,19 @@ public class AuthController {
                     content = @Content(schema = @Schema(implementation = ApiResponse.class)))
     })
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<TokenRefreshResponse>> refreshAccessToken(@RequestBody RefreshTokenRequest refreshTokenRequest) {
-        TokenRefreshResponse response = authService.refreshAccessToken(refreshTokenRequest);
+    public ResponseEntity<ApiResponse<TokenRefreshResponse>> refreshAccessToken(HttpServletRequest request) {
+        TokenRefreshResponse response = authService.refreshAccessToken(request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @Operation(summary = "[테스트용] 만료된 토큰 생성", description = "테스트를 위해 이미 만료된 Access Token을 생성합니다. 이 토큰으로 /refresh API를 테스트할 수 있습니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "만료된 토큰 생성 성공",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @PostMapping("/test/expired-token")
+    public ResponseEntity<ApiResponse<LoginResponse>> createExpiredToken(@RequestBody LoginRequest loginRequest) {
+        LoginResponse response = authService.createExpiredTokenForTest(loginRequest);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

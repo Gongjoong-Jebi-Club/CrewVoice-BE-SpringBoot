@@ -20,7 +20,12 @@ public class CorsConfig {
         config.setAllowCredentials(true);
 
         // 허용할 Origin 설정 (allowCredentials=true일 때는 originPatterns 사용)
-        config.setAllowedOriginPatterns(Arrays.asList("*"));
+        config.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:5173",  // Vite 개발 서버
+                "http://localhost:3000",  // 추가 개발 서버
+                "https://crewvoice.cloud", // 프로덕션 서버
+                "https://crew-voice-client-vercel.vercel.app/" // vercel Domains 서버
+        ));
 
         // 허용할 헤더
         config.setAllowedHeaders(Arrays.asList(

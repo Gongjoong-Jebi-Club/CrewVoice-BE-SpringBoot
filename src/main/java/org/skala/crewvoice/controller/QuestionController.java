@@ -11,6 +11,7 @@ import org.skala.crewvoice.dto.request.QuestionStep2Request;
 import org.skala.crewvoice.dto.request.QuestionStep2UpdateRequest;
 import org.skala.crewvoice.dto.response.QuestionEditResponse;
 import org.skala.crewvoice.dto.response.QuestionResponse;
+import org.skala.crewvoice.dto.response.QuestionStep2DetailResponse;
 import org.skala.crewvoice.service.QuestionService;
 import org.skala.crewvoice.service.QuestionStep2Service;
 import org.springframework.http.ResponseEntity;
@@ -38,11 +39,25 @@ public class QuestionController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "STEP2 조회에 실패했습니다.",
                     content = @Content(schema = @Schema(implementation = ApiResponse.class)))
     })
-    @GetMapping("/step2/{pageNumber}")
+    @GetMapping("/step2/list/{pageNumber}")
     public ResponseEntity<ApiResponse<List<QuestionResponse>>> getStep2Questions(@PathVariable int pageNumber) {
         List<QuestionResponse> questions = questionStep2Service.getStep2Questions(pageNumber);
         ApiResponse<List<QuestionResponse>> response = ApiResponse.success(questions);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "STEP2 특정 문제 정보 조회", description = "STEP2 문제 편집 페이지에서 수정 창에 기본값으로 들어갈 문제 정보를 조회합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "사용자의 로그인 검증을 실패했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @GetMapping("/step2/{questionId}")
+    public ResponseEntity<ApiResponse<QuestionStep2DetailResponse>> getStep2QuestionById(@PathVariable Long questionId) {
+        QuestionStep2DetailResponse response = questionStep2Service.getQuestionById(questionId);
+        ApiResponse<QuestionStep2DetailResponse> apiResponse = ApiResponse.success(response);
+        return ResponseEntity.ok(apiResponse);
     }
 
     @Operation(summary = "STEP2 문제 추가", description = "문제은행의 STEP2 문제 추가 화면에서 새로운 문제를 추가합니다.")

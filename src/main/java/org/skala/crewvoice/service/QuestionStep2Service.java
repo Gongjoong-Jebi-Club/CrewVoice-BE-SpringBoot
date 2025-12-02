@@ -5,6 +5,7 @@ import org.skala.crewvoice.dto.request.QuestionStep2Request;
 import org.skala.crewvoice.dto.request.QuestionStep2UpdateRequest;
 import org.skala.crewvoice.dto.response.QuestionEditResponse;
 import org.skala.crewvoice.dto.response.QuestionResponse;
+import org.skala.crewvoice.dto.response.QuestionStep2DetailResponse;
 import org.skala.crewvoice.exception.ErrorCode;
 import org.skala.crewvoice.exception.custom.EntityNotFoundException;
 import org.skala.crewvoice.repository.QuestionStep2Repository;
@@ -36,6 +37,13 @@ public class QuestionStep2Service {
                 .stream()
                 .map(QuestionResponse::from)
                 .collect(Collectors.toList());
+    }
+
+    public QuestionStep2DetailResponse getQuestionById(Long questionId) {
+        QuestionStep2 question = questionStep2Repository.findById(questionId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND));
+
+        return QuestionStep2DetailResponse.from(question);
     }
 
     @Transactional

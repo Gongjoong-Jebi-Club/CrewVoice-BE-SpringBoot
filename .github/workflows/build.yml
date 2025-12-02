@@ -21,7 +21,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # Gradle 캐시 설정 단계
       - name: Cache Gradle packages
         uses: actions/cache@v4
         with:
@@ -35,9 +34,12 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # Gradle 빌드 실행 단계
       - name: Build with Gradle
         run: ./gradlew build --no-daemon -x test
+
+      - name: Set lower case image name
+        id: string
+        run: echo "image_name=$(echo ghcr.io/${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -50,7 +52,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ${{ steps.string.outputs.image_name }}
           tags: |
             type=ref,event=branch
             type=sha
@@ -75,18 +77,21 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            # Login to GitHub Container Registry
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+            # Set image name to lower case
+            IMAGE_NAME=$(echo ghcr.io/${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+
+            # Login to GitHub Container Registry with sudo
+            echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
             
-            # Pull the latest image
-            docker pull ghcr.io/${{ github.repository }}:latest
+            # Pull the latest image with sudo
+            sudo docker pull $IMAGE_NAME:latest
             
-            # Stop and remove the existing container
-            docker stop crewvoice-be || true
-            docker rm crewvoice-be || true
+            # Stop and remove the existing container with sudo
+            sudo docker stop crewvoice-be || true
+            sudo docker rm crewvoice-be || true
             
-            # Run the new container with environment variables from GitHub Secrets
-            docker run -d --name crewvoice-be -p 8080:8080 \
+            # Run the new container with sudo
+            sudo docker run -d --name crewvoice-be -p 8080:8080 \
               -e DB_HOST=${{ secrets.DB_HOST }} \
               -e DB_NAME=${{ secrets.DB_NAME }} \
               -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
@@ -96,4 +101,4 @@ jobs:
               -e S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }} \
               -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
               -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-              --restart always ghcr.io/${{ github.repository }}:latest
+              --restart always $IMAGE_NAME:latest

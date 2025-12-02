@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.skala.crewvoice.domain.User;
 import org.skala.crewvoice.domain.UserStatus;
 import org.skala.crewvoice.dto.request.LoginRequest;
-import org.skala.crewvoice.dto.request.RefreshTokenRequest;
 import org.skala.crewvoice.dto.request.SignUpRequest;
 import org.skala.crewvoice.dto.response.LoginResponse;
 import org.skala.crewvoice.dto.response.SignUpResponse;
@@ -73,10 +72,10 @@ public class AuthService implements UserDetailsService {
         String accessToken = jwtTokenProvider.createAccessToken(user.getEmail());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
-        // Redis에 Refresh Token 저장
+        // Redis에 Refresh Token 저장 (클라이언트에는 전송하지 않음)
         redisService.set("RT:" + user.getEmail(), refreshToken, refreshTokenValidityInMilliseconds, TimeUnit.MILLISECONDS);
 
-        return new LoginResponse(accessToken, refreshToken, user.getRole());
+        return new LoginResponse(accessToken, user.getRole());
     }
 
     @Transactional
@@ -95,27 +94,56 @@ public class AuthService implements UserDetailsService {
         }
     }
 
-    public TokenRefreshResponse refreshAccessToken(RefreshTokenRequest refreshTokenRequest) {
-        String refreshToken = refreshTokenRequest.getRefreshToken();
-
-        // 1. Refresh Token 유효성 검증
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new IllegalArgumentException("유효하지 않은 Refresh Token 입니다.");
+    public TokenRefreshResponse refreshAccessToken(HttpServletRequest request) {
+        // 1. Authorization 헤더에서 Access Token 추출
+        final String bearerToken = request.getHeader("Authorization");
+        if (!StringUtils.hasText(bearerToken) || !bearerToken.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("Authorization 헤더가 없거나 형식이 잘못되었습니다.");
         }
+        String accessToken = bearerToken.substring(7);
 
-        // 2. 토큰에서 사용자 이메일 추출
-        String email = jwtTokenProvider.getSubject(refreshToken);
+        // 2. 만료된 Access Token에서 사용자 이메일 추출
+        String email = jwtTokenProvider.getSubjectFromExpiredToken(accessToken);
 
-        // 3. Redis에 저장된 Refresh Token과 일치하는지 확인
+        // 3. Redis에서 해당 사용자의 Refresh Token 조회
         String storedRefreshToken = (String) redisService.get("RT:" + email);
-        if (!refreshToken.equals(storedRefreshToken)) {
-            throw new IllegalArgumentException("저장된 Refresh Token과 일치하지 않습니다.");
+        if (storedRefreshToken == null) {
+            throw new IllegalArgumentException("저장된 Refresh Token이 없습니다. 다시 로그인해주세요.");
         }
 
-        // 4. 새로운 Access Token 생성
+        // 4. Redis에 저장된 Refresh Token 유효성 검증
+        if (!jwtTokenProvider.validateToken(storedRefreshToken)) {
+            // Refresh Token도 만료된 경우 Redis에서 삭제
+            redisService.delete("RT:" + email);
+            throw new IllegalArgumentException("Refresh Token이 만료되었습니다. 다시 로그인해주세요.");
+        }
+
+        // 5. 새로운 Access Token 생성
         String newAccessToken = jwtTokenProvider.createAccessToken(email);
 
         return new TokenRefreshResponse(newAccessToken);
+    }
+
+    /**
+     * 테스트용: 만료된 Access Token 생성
+     * Redis에 Refresh Token을 저장하여 /refresh API 테스트 가능
+     */
+    public LoginResponse createExpiredTokenForTest(LoginRequest loginRequest) {
+        User user = userRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
+
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("잘못된 비밀번호입니다.");
+        }
+
+        // 이미 만료된 Access Token 생성
+        String expiredAccessToken = jwtTokenProvider.createExpiredAccessToken(user.getEmail());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
+
+        // Redis에 Refresh Token 저장 (테스트를 위해)
+        redisService.set("RT:" + user.getEmail(), refreshToken, refreshTokenValidityInMilliseconds, TimeUnit.MILLISECONDS);
+
+        return new LoginResponse(expiredAccessToken, user.getRole());
     }
 
     @Override

@@ -20,7 +20,17 @@ public class CorsConfig {
         config.setAllowCredentials(true);
 
         // 허용할 Origin 설정 (allowCredentials=true일 때는 originPatterns 사용)
-        config.setAllowedOriginPatterns(Arrays.asList("*"));
+        config.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:5173",  // Vite 개발 서버
+                "http://localhost:3000",  // 추가 개발 서버
+                "http://localhost:8000",  // fastAPI
+                "http://localhost:8080",  // springBoot
+                "https://server.crewvoice.cloud/", // springBoot 배포 서버
+                "https://ai.crewvoice.cloud/", // fastapi 배포 서버
+                "https://chat.crewvoice.cloud/", // chat 배포 서버
+                "https://www.crewvoice.cloud/", // 프로덕션 서버
+                "https://crew-voice-client-vercel.vercel.app/" // vercel Domains 서버
+        ));
 
         // 허용할 헤더
         config.setAllowedHeaders(Arrays.asList(

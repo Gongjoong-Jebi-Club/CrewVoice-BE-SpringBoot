@@ -7,11 +7,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.skala.crewvoice.common.ApiResponse;
 import org.skala.crewvoice.dto.request.QuestionRequest;
+import org.skala.crewvoice.dto.request.QuestionStep2RandomRequest;
 import org.skala.crewvoice.dto.request.QuestionStep2Request;
 import org.skala.crewvoice.dto.request.QuestionStep2UpdateRequest;
 import org.skala.crewvoice.dto.response.QuestionEditResponse;
 import org.skala.crewvoice.dto.response.QuestionResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2DetailResponse;
+import org.skala.crewvoice.dto.response.QuestionStep2RandomResponse;
 import org.skala.crewvoice.service.QuestionService;
 import org.skala.crewvoice.service.QuestionStep2Service;
 import org.springframework.http.ResponseEntity;
@@ -87,6 +89,27 @@ public class QuestionController {
             @RequestBody QuestionStep2UpdateRequest request) {
         QuestionEditResponse response = questionStep2Service.updateQuestion(questionId, request);
         ApiResponse<QuestionEditResponse> apiResponse = ApiResponse.success(response);
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @Operation(summary = "STEP2 문제 조회", description = "STEP2 문제를 랜덤으로 조회합니다. questionIdList에 이전 문제 ID를 포함하면 해당 문제들을 제외하고 랜덤 선택합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "사용자의 로그인 검증을 실패했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @PostMapping("/step2/random")
+    public ResponseEntity<ApiResponse<QuestionStep2RandomResponse>> getStep2RandomQuestion(
+            @RequestBody(required = false) QuestionStep2RandomRequest request) {
+
+        // request가 null이면 빈 객체 생성
+        if (request == null) {
+            request = new QuestionStep2RandomRequest();
+        }
+
+        QuestionStep2RandomResponse response = questionStep2Service.getRandomQuestion(request);
+        ApiResponse<QuestionStep2RandomResponse> apiResponse = ApiResponse.success(response);
         return ResponseEntity.ok(apiResponse);
     }
 }

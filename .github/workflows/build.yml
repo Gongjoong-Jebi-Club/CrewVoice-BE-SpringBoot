@@ -89,6 +89,9 @@ jobs:
             # Stop and remove the existing container with sudo
             sudo docker stop crewvoice-be || true
             sudo docker rm crewvoice-be || true
+
+            # Kill any process using port 8080
+            sudo fuser -k 8080/tcp || true
             
             # Run the new container with sudo
             sudo docker run -d --name crewvoice-be -p 8080:8080 \

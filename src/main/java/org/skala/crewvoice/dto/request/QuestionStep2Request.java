@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class QuestionStep2Request {
+    private Long questionId; // nullable: null이면 추가, 값이 있으면 수정
     private String aircraftType;
     private String situationDescription;
     private String scriptKorean;

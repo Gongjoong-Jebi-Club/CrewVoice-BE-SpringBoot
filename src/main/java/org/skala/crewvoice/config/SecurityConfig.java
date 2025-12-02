@@ -22,10 +22,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
+                .cors(cors -> cors.configure(http)) // CORS 설정 활성화
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/v1/login", "/api/v1/sign-up", "/api/v1/refresh", "/swagger-ui/**", "/v3/api-docs/**", "/health").permitAll() // 서버 상태 확인 -> /health 추가
+                        .requestMatchers("/api/v1/login", "/api/v1/sign-up", "/api/v1/logout", "/api/v1/refresh", "/api/v1/test/**", "/swagger-ui/**", "/v3/api-docs/**", "/health").permitAll() // 로그아웃 추가
                         .anyRequest().authenticated() // 토큰 없이 접근 시 403 Forbidden Error 발생
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

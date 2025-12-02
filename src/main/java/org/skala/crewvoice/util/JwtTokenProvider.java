@@ -1,0 +1,103 @@
+package org.skala.crewvoice.util;
+
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import javax.crypto.SecretKey;
+import java.util.Base64;
+import java.util.Date;
+
+@Slf4j
+@Component
+public class JwtTokenProvider {
+
+    private final SecretKey key;
+    private final long accessTokenValidityInMilliseconds;
+    private final long refreshTokenValidityInMilliseconds;
+
+    public JwtTokenProvider(@Value("${security.jwt.token.secret-key}") String secretKey,
+                            @Value("${security.jwt.token.access-expire-length}") long accessTokenValidityInMilliseconds,
+                            @Value("${security.jwt.token.refresh-expire-length}") long refreshTokenValidityInMilliseconds) {
+        byte[] keyBytes = Base64.getDecoder().decode(secretKey);
+        this.key = Keys.hmacShaKeyFor(keyBytes);
+        this.accessTokenValidityInMilliseconds = accessTokenValidityInMilliseconds;
+        this.refreshTokenValidityInMilliseconds = refreshTokenValidityInMilliseconds;
+    }
+
+    public String createAccessToken(String email) {
+        return createToken(email, accessTokenValidityInMilliseconds);
+    }
+
+    public String createRefreshToken(String email) {
+        return createToken(email, refreshTokenValidityInMilliseconds);
+    }
+
+    /**
+     * 테스트용: 이미 만료된 Access Token 생성 (만료 시간 -1초)
+     */
+    public String createExpiredAccessToken(String email) {
+        return createToken(email, -1000); // 1초 전에 만료
+    }
+
+    private String createToken(String email, long validityInMilliseconds) {
+        Claims claims = Jwts.claims().setSubject(email);
+        Date now = new Date();
+        Date validity = new Date(now.getTime() + validityInMilliseconds);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(validity)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String getSubject(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().getSubject();
+    }
+
+    /**
+     * 만료된 토큰에서도 subject(email)를 추출
+     * Refresh 시 만료된 accessToken에서 userId를 파악하기 위해 사용
+     */
+    public String getSubjectFromExpiredToken(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+        } catch (ExpiredJwtException e) {
+            // 만료된 토큰이어도 클레임은 추출 가능
+            return e.getClaims().getSubject();
+        } catch (JwtException | IllegalArgumentException e) {
+            log.error("Invalid JWT token: {}", e.getMessage());
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
+        }
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            log.debug("Invalid JWT token: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    public Long getRemainingTime(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+            Date expiration = claims.getExpiration();
+            Date now = new Date();
+            return expiration.getTime() - now.getTime();
+        } catch (JwtException | IllegalArgumentException e) {
+            return 0L;
+        }
+    }
+}

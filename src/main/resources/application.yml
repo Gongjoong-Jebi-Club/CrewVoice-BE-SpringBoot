@@ -7,8 +7,8 @@ spring:
   # Redis 설정
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
       password:
       timeout: 60000  # 연결 타임아웃 (ms)
       lettuce:
@@ -56,8 +56,6 @@ server:
 
 # Swagger/OpenAPI 설정
 springdoc:
-  api-docs:
-    path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
     tags-sorter: alpha
@@ -65,9 +63,23 @@ springdoc:
     display-request-duration: true
     doc-expansion: none
   show-actuator: false
+  api-docs:
+    path: /v3/api-docs
+  servers:
+    - url: http://localhost:8080
+      description: Local server
+    - url: https://server.crewvoice.cloud
+      description: Production server
 
 logging:
   level:
     org.springframework: INFO
     org.skala.crewvoice: DEBUG
     org.springframework.web.servlet.DispatcherServlet: DEBUG
+
+security:
+  jwt:
+    token:
+      secret-key: ${BASE64_SECRET_KEY}
+      access-expire-length: 3600000 # 1 hour
+      refresh-expire-length: 1209600000 # 2 weeks

@@ -1,7 +1,6 @@
 package org.skala.crewvoice.service;
 
 import org.skala.crewvoice.domain.QuestionStep2;
-import org.skala.crewvoice.dto.request.QuestionStep2RandomRequest;
 import org.skala.crewvoice.dto.request.QuestionStep2Request;
 import org.skala.crewvoice.dto.request.QuestionStep2UpdateRequest;
 import org.skala.crewvoice.dto.response.QuestionEditResponse;
@@ -48,20 +47,11 @@ public class QuestionStep2Service {
         return QuestionStep2DetailResponse.from(question);
     }
 
-    public QuestionStep2RandomResponse getRandomQuestion(QuestionStep2RandomRequest request) {
-        boolean isEmpty = request.getQuestionIdList() == null || request.getQuestionIdList().isEmpty();
-        List<Long> excludedIds = isEmpty ? List.of() : request.getQuestionIdList();
-
-        QuestionStep2 question = questionStep2Repository.findRandomQuestion(excludedIds, isEmpty)
+    public QuestionStep2RandomResponse getRandomQuestion() {
+        QuestionStep2 question = questionStep2Repository.findRandomQuestion(List.of(), true)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND));
 
-        // 이전 문제 ID 목록에 새로 선택된 문제 ID 추가
-        List<Long> accumulatedQuestions = isEmpty ?
-                List.of(question.getId()) :
-                java.util.stream.Stream.concat(excludedIds.stream(), java.util.stream.Stream.of(question.getId()))
-                        .collect(Collectors.toList());
-
-        return QuestionStep2RandomResponse.of(question, accumulatedQuestions);
+        return QuestionStep2RandomResponse.from(question);
     }
 
     @Transactional

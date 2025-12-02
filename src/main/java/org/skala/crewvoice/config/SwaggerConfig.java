@@ -32,7 +32,7 @@ public class SwaggerConfig {
 
         Info info = new Info()
                 .title("CrewVoice API Documentation")
-                .version("1.0.0")
+                .version("2.0.0")
                 .description("항공사 객실승무원 기내방송 AI 평가 시스템 REST API")
                 .contact(contact)
                 .license(new License().name("Apache 2.0").url("http://www.apache.org/licenses/LICENSE-2.0.html"));

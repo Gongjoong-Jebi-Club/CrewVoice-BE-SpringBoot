@@ -15,24 +15,27 @@ import java.util.Date;
 public class JwtTokenProvider {
 
     private final SecretKey key;
-    private final long validityInMilliseconds;
+    private final long accessTokenValidityInMilliseconds;
+    private final long refreshTokenValidityInMilliseconds;
 
-    /**
-     * JwtTokenProvider 생성자
-     * @param secretKey Base64로 인코딩된 HMAC-SHA 키.
-     *                  키는 반드시 256비트(32바이트) 이상의 길이를 가져야 합니다.
-     *                  예: `java.security.SecureRandom random = new java.security.SecureRandom(); byte[] keyBytes = new byte[32]; random.nextBytes(keyBytes); String encodedKey = java.util.Base64.getEncoder().encodeToString(keyBytes);`
-     * @param validityInMilliseconds 토큰 만료 시간 (밀리초)
-     */
     public JwtTokenProvider(@Value("${security.jwt.token.secret-key}") String secretKey,
-                            @Value("${security.jwt.token.expire-length}") long validityInMilliseconds) {
-        // Base64 디코딩을 통해 SecretKey 객체 생성
+                            @Value("${security.jwt.token.access-expire-length}") long accessTokenValidityInMilliseconds,
+                            @Value("${security.jwt.token.refresh-expire-length}") long refreshTokenValidityInMilliseconds) {
         byte[] keyBytes = Base64.getDecoder().decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
-        this.validityInMilliseconds = validityInMilliseconds;
+        this.accessTokenValidityInMilliseconds = accessTokenValidityInMilliseconds;
+        this.refreshTokenValidityInMilliseconds = refreshTokenValidityInMilliseconds;
     }
 
-    public String createToken(String email) {
+    public String createAccessToken(String email) {
+        return createToken(email, accessTokenValidityInMilliseconds);
+    }
+
+    public String createRefreshToken(String email) {
+        return createToken(email, refreshTokenValidityInMilliseconds);
+    }
+
+    private String createToken(String email, long validityInMilliseconds) {
         Claims claims = Jwts.claims().setSubject(email);
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
@@ -54,8 +57,19 @@ public class JwtTokenProvider {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            log.error("Invalid JWT token: {}", e.getMessage());
+            log.debug("Invalid JWT token: {}", e.getMessage());
             return false;
+        }
+    }
+
+    public Long getRemainingTime(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+            Date expiration = claims.getExpiration();
+            Date now = new Date();
+            return expiration.getTime() - now.getTime();
+        } catch (JwtException | IllegalArgumentException e) {
+            return 0L;
         }
     }
 }

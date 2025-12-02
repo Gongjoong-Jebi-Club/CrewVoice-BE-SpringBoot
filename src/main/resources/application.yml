@@ -74,4 +74,5 @@ security:
   jwt:
     token:
       secret-key: ${BASE64_SECRET_KEY}
-      expire-length: 3600000 # 1 hour
+      access-expire-length: 3600000 # 1 hour
+      refresh-expire-length: 1209600000 # 2 weeks

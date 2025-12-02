@@ -23,7 +23,7 @@ public class CorsConfig {
         config.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:5173",  // Vite 개발 서버
                 "http://localhost:3000",  // 추가 개발 서버
-                "https://crewvoice.cloud", // 프로덕션 서버
+                "https://www.crewvoice.cloud/", // 프로덕션 서버
                 "https://crew-voice-client-vercel.vercel.app/" // vercel Domains 서버
         ));
 

@@ -55,6 +55,9 @@ public enum ErrorCode {
     // Script - 스크립트 관련 에러
     SCRIPT_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "Script not found"),
 
+    // Question - 문제 관련 에러
+    QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "Q001", "Question not found"),
+
     // File - 파일 관련 에러
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "F001", "File upload failed"),
     FILE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "F002", "File delete failed"),

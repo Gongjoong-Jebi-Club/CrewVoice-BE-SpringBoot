@@ -55,30 +55,33 @@ public class QuestionStep2Service {
     }
 
     @Transactional
-    public QuestionEditResponse addQuestion(QuestionStep2Request request) {
-        QuestionStep2 newQuestion = new QuestionStep2(
-                request.getSituationDescription(),
-                request.getAircraftType(),
-                request.getScriptKorean(),
-                request.getScriptEnglish(),
-                request.getExplanation()
-        );
+    public QuestionEditResponse saveOrUpdateQuestion(QuestionStep2Request request) {
+        // questionId가 null이면 추가, 값이 있으면 수정
+        if (request.getQuestionId() == null) {
+            // 문제 추가
+            QuestionStep2 newQuestion = new QuestionStep2(
+                    request.getSituationDescription(),
+                    request.getAircraftType(),
+                    request.getScriptKorean(),
+                    request.getScriptEnglish(),
+                    request.getExplanation()
+            );
+            QuestionStep2 savedQuestion = questionStep2Repository.save(newQuestion);
+            return new QuestionEditResponse(savedQuestion.getId());
+        } else {
+            // 문제 수정
+            QuestionStep2 question = questionStep2Repository.findById(request.getQuestionId())
+                    .orElseThrow(() -> new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND));
 
-        QuestionStep2 savedQuestion = questionStep2Repository.save(newQuestion);
-        return new QuestionEditResponse(savedQuestion.getId());
-    }
+            question.update(
+                    request.getSituationDescription(),
+                    request.getAircraftType(),
+                    request.getScriptKorean(),
+                    request.getScriptEnglish(),
+                    request.getExplanation()
+            );
 
-    @Transactional
-    public QuestionEditResponse updateQuestion(Long questionId, QuestionStep2UpdateRequest request) {
-        QuestionStep2 question = questionStep2Repository.findById(questionId)
-                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND));
-
-        question.update(
-                request.getSituationDescription(),
-                request.getAircraftType(),
-                request.getExplanation()
-        );
-
-        return new QuestionEditResponse(question.getId());
+            return new QuestionEditResponse(question.getId());
+        }
     }
 }

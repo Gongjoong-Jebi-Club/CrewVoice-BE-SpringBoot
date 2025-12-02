@@ -111,9 +111,8 @@ jobs:
             # Connect Redis to network if not already connected
             sudo docker network connect crewvoice-network redis-server 2>/dev/null || true
 
-            # Stop and remove the existing application container
-            sudo docker stop crewvoice-be || true
-            sudo docker rm crewvoice-be || true
+            # Stop and remove the existing application container (force remove to avoid timing issues)
+            sudo docker rm -f crewvoice-be || true
 
             # Kill any process using port 8080
             sudo fuser -k 8080/tcp || true

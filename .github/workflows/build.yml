@@ -93,11 +93,12 @@ jobs:
             # Kill any process using port 8080
             sudo fuser -k 8080/tcp || true
             
-            # Run the new container with standard Spring Boot environment variables
+            # Run the new container with corrected environment variables
             sudo docker run -d --name crewvoice-be -p 8080:8080 \
-              -e SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.DB_HOST }}/${{ secrets.DB_NAME }} \
-              -e SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }} \
-              -e SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              -e DB_HOST=${{ secrets.DB_HOST }} \
+              -e DB_NAME=${{ secrets.DB_NAME }} \
+              -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
+              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
               -e SPRING_DATA_REDIS_HOST=${{ secrets.REDIS_HOST }} \
               -e SPRING_DATA_REDIS_PORT=${{ secrets.REDIS_PORT }} \
               -e S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }} \

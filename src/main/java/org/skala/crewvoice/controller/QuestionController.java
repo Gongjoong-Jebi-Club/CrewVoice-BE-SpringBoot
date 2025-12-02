@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.skala.crewvoice.common.ApiResponse;
 import org.skala.crewvoice.dto.request.QuestionRequest;
 import org.skala.crewvoice.dto.request.QuestionStep2Request;
+import org.skala.crewvoice.dto.request.QuestionStep2UpdateRequest;
 import org.skala.crewvoice.dto.response.QuestionEditResponse;
 import org.skala.crewvoice.dto.response.QuestionResponse;
 import org.skala.crewvoice.service.QuestionService;
@@ -54,6 +55,22 @@ public class QuestionController {
     @PostMapping("/step2")
     public ResponseEntity<ApiResponse<QuestionEditResponse>> addStep2Question(@RequestBody QuestionStep2Request request) {
         QuestionEditResponse response = questionStep2Service.addQuestion(request);
+        ApiResponse<QuestionEditResponse> apiResponse = ApiResponse.success(response);
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @Operation(summary = "STEP2 문제 수정", description = "문제은행의 STEP2 문제 수정 화면에서 기존 문제를 수정합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "문제 수정 성공",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "STEP2 문제 편집에 실패했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @PatchMapping("/step2/{questionId}")
+    public ResponseEntity<ApiResponse<QuestionEditResponse>> updateStep2Question(
+            @PathVariable Long questionId,
+            @RequestBody QuestionStep2UpdateRequest request) {
+        QuestionEditResponse response = questionStep2Service.updateQuestion(questionId, request);
         ApiResponse<QuestionEditResponse> apiResponse = ApiResponse.success(response);
         return ResponseEntity.ok(apiResponse);
     }

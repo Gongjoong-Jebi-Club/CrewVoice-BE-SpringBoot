@@ -2,7 +2,10 @@ package org.skala.crewvoice.service;
 
 import org.skala.crewvoice.domain.QuestionStep2;
 import org.skala.crewvoice.dto.request.QuestionStep2Request;
+import org.skala.crewvoice.dto.request.QuestionStep2UpdateRequest;
 import org.skala.crewvoice.dto.response.QuestionEditResponse;
+import org.skala.crewvoice.exception.ErrorCode;
+import org.skala.crewvoice.exception.custom.EntityNotFoundException;
 import org.skala.crewvoice.repository.QuestionStep2Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,5 +32,19 @@ public class QuestionStep2Service {
 
         QuestionStep2 savedQuestion = questionStep2Repository.save(newQuestion);
         return new QuestionEditResponse(savedQuestion.getId());
+    }
+
+    @Transactional
+    public QuestionEditResponse updateQuestion(Long questionId, QuestionStep2UpdateRequest request) {
+        QuestionStep2 question = questionStep2Repository.findById(questionId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND));
+
+        question.update(
+                request.getSituationDescription(),
+                request.getAircraftType(),
+                request.getExplanation()
+        );
+
+        return new QuestionEditResponse(question.getId());
     }
 }

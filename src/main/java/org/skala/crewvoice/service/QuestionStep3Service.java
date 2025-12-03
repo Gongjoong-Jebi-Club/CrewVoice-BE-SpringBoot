@@ -2,24 +2,21 @@ package org.skala.crewvoice.service;
 
 import org.skala.crewvoice.domain.QuestionStep3;
 import org.skala.crewvoice.dto.request.QuestionStep3RandomRequest;
+import org.skala.crewvoice.dto.response.QuestionStep3DetailResponse;
 import org.skala.crewvoice.dto.response.QuestionStep3ListResponse;
 import org.skala.crewvoice.dto.response.QuestionStep3RandomResponse;
 import org.skala.crewvoice.exception.ErrorCode;
 import org.skala.crewvoice.exception.custom.EntityNotFoundException;
 import org.skala.crewvoice.repository.QuestionStep3Repository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
-public class QuestionStep3Service {
+public class QuestionStep3Service extends BaseQuestionService {
 
     private final QuestionStep3Repository questionStep3Repository;
 
@@ -28,14 +25,11 @@ public class QuestionStep3Service {
     }
 
     public List<QuestionStep3ListResponse> getStep3Questions(int pageNumber) {
-        // 페이지는 0부터 시작하므로 pageNumber - 1
-        Pageable pageable = PageRequest.of(pageNumber - 1, 10);
-        Page<QuestionStep3> questionsPage = questionStep3Repository.findAll(pageable);
+        return getQuestions(pageNumber, questionStep3Repository, QuestionStep3ListResponse::from);
+    }
 
-        return questionsPage.getContent()
-                .stream()
-                .map(QuestionStep3ListResponse::from)
-                .collect(Collectors.toList());
+    public QuestionStep3DetailResponse getQuestionById(Long questionId) {
+        return getQuestionById(questionId, questionStep3Repository, QuestionStep3DetailResponse::from);
     }
 
     public QuestionStep3RandomResponse getRandomQuestion(QuestionStep3RandomRequest request) {

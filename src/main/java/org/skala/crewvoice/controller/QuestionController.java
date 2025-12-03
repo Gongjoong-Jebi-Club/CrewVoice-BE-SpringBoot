@@ -13,6 +13,7 @@ import org.skala.crewvoice.dto.response.QuestionEditResponse;
 import org.skala.crewvoice.dto.response.QuestionResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2DetailResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2RandomResponse;
+import org.skala.crewvoice.dto.response.QuestionStep3DetailResponse;
 import org.skala.crewvoice.dto.response.QuestionStep3ListResponse;
 import org.skala.crewvoice.dto.response.QuestionStep3RandomResponse;
 import org.skala.crewvoice.service.QuestionService;
@@ -106,6 +107,20 @@ public class QuestionController {
         List<QuestionStep3ListResponse> questions = questionStep3Service.getStep3Questions(pageNumber);
         ApiResponse<List<QuestionStep3ListResponse>> response = ApiResponse.success(questions);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "STEP3 특정 문제 정보 조회", description = "STEP3 문제 편집 페이지에서 수정 창에 기본값으로 들어갈 문제 정보를 조회합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요청이 성공했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "사용자의 로그인 검증을 실패했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @GetMapping("/step3/{questionId}")
+    public ResponseEntity<ApiResponse<QuestionStep3DetailResponse>> getStep3QuestionById(@PathVariable Long questionId) {
+        QuestionStep3DetailResponse response = questionStep3Service.getQuestionById(questionId);
+        ApiResponse<QuestionStep3DetailResponse> apiResponse = ApiResponse.success(response);
+        return ResponseEntity.ok(apiResponse);
     }
 
     @Operation(summary = "STEP3 문제 조회 (출제)", description = "모의고사 Step3 문제 넘어갈 때마다 호출되는 API로, Step3의 문제를 하나 조회합니다.")

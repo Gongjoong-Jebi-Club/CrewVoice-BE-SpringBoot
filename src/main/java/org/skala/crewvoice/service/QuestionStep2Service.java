@@ -10,18 +10,14 @@ import org.skala.crewvoice.dto.response.QuestionStep2RandomResponse;
 import org.skala.crewvoice.exception.ErrorCode;
 import org.skala.crewvoice.exception.custom.EntityNotFoundException;
 import org.skala.crewvoice.repository.QuestionStep2Repository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
-public class QuestionStep2Service {
+public class QuestionStep2Service extends BaseQuestionService {
 
     private final QuestionStep2Repository questionStep2Repository;
 
@@ -30,21 +26,11 @@ public class QuestionStep2Service {
     }
 
     public List<QuestionResponse> getStep2Questions(int pageNumber) {
-        // 페이지는 0부터 시작하므로 pageNumber - 1
-        Pageable pageable = PageRequest.of(pageNumber - 1, 10);
-        Page<QuestionStep2> questionsPage = questionStep2Repository.findAll(pageable);
-
-        return questionsPage.getContent()
-                .stream()
-                .map(QuestionResponse::from)
-                .collect(Collectors.toList());
+        return getQuestions(pageNumber, questionStep2Repository, QuestionResponse::from);
     }
 
     public QuestionStep2DetailResponse getQuestionById(Long questionId) {
-        QuestionStep2 question = questionStep2Repository.findById(questionId)
-                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND));
-
-        return QuestionStep2DetailResponse.from(question);
+        return getQuestionById(questionId, questionStep2Repository, QuestionStep2DetailResponse::from);
     }
 
     public QuestionStep2RandomResponse getRandomQuestion() {

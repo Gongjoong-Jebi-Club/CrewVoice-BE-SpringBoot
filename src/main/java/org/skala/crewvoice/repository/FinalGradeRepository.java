@@ -17,4 +17,14 @@ public interface FinalGradeRepository extends JpaRepository<FinalGrade, Long> {
      */
     @Query("SELECT fg FROM FinalGrade fg JOIN FETCH fg.evaluation WHERE fg.user.id = :userId ORDER BY fg.createdAt DESC")
     List<FinalGrade> findByUserIdOrderByCreatedAtDesc(@Param("userId") Long userId);
+
+    /**
+     * 특정 사용자와 평가 ID로 최종 성적 조회
+     *
+     * @param userId 사용자 ID
+     * @param evaluationId 평가 ID
+     * @return 최종 성적
+     */
+    @Query("SELECT fg FROM FinalGrade fg WHERE fg.user.id = :userId AND fg.evaluation.id = :evaluationId")
+    FinalGrade findByUserIdAndEvaluationId(@Param("userId") Long userId, @Param("evaluationId") Long evaluationId);
 }

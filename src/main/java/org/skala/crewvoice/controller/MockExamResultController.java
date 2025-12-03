@@ -8,10 +8,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.skala.crewvoice.common.ApiResponse;
 import org.skala.crewvoice.domain.User;
 import org.skala.crewvoice.dto.response.MockExamResultResponse;
+import org.skala.crewvoice.dto.response.MockExamScoresResponse;
 import org.skala.crewvoice.service.MockExamResultService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -41,6 +43,22 @@ public class MockExamResultController {
     ) {
         List<MockExamResultResponse> results = mockExamResultService.getMyMockExamResults(user);
         ApiResponse<List<MockExamResultResponse>> response = ApiResponse.success(results);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "특정 모의고사 점수 조회", description = "모의고사 결과 화면에서 특정 모의고사의 점수들을 조회하는 API")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요청이 성공했습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "사용자의 로그인 검증을 실패했습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 평가를 찾을 수 없습니다.")
+    })
+    @GetMapping("/{evaluationId}")
+    public ResponseEntity<ApiResponse<MockExamScoresResponse>> getMockExamScores(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long evaluationId
+    ) {
+        MockExamScoresResponse result = mockExamResultService.getMockExamScores(user, evaluationId);
+        ApiResponse<MockExamScoresResponse> response = ApiResponse.success(result);
         return ResponseEntity.ok(response);
     }
 }

@@ -1,0 +1,37 @@
+package org.skala.crewvoice.service;
+
+import org.skala.crewvoice.domain.FinalGrade;
+import org.skala.crewvoice.domain.User;
+import org.skala.crewvoice.dto.response.MockExamResultResponse;
+import org.skala.crewvoice.repository.FinalGradeRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional(readOnly = true)
+public class MockExamResultService {
+
+    private final FinalGradeRepository finalGradeRepository;
+
+    public MockExamResultService(FinalGradeRepository finalGradeRepository) {
+        this.finalGradeRepository = finalGradeRepository;
+    }
+
+    /**
+     * 현재 로그인한 사용자의 모의고사 결과를 최신 응시순으로 조회
+     *
+     * @param user 현재 로그인한 사용자
+     * @return 모의고사 결과 리스트 (최신순)
+     */
+    public List<MockExamResultResponse> getMyMockExamResults(User user) {
+        List<FinalGrade> finalGrades = finalGradeRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+
+        return finalGrades.stream()
+                .map(MockExamResultResponse::from)
+                .collect(Collectors.toList());
+    }
+}
+

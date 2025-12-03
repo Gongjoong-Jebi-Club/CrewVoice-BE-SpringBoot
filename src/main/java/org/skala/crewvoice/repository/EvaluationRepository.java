@@ -22,4 +22,9 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, Long> {
             ":now BETWEEN e.startDate AND e.endDate " +
             "ORDER BY e.startDate DESC")
     List<Evaluation> findActiveEvaluations(@Param("now") OffsetDateTime now);
+
+    /**
+     * 모든 평가 조회 (생성일 기준 최신순)
+     */
+    List<Evaluation> findAllByOrderByCreatedAtDesc();
 }

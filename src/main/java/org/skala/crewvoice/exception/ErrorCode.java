@@ -58,7 +58,10 @@ public enum ErrorCode {
     // File - 파일 관련 에러
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "F001", "File upload failed"),
     FILE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "F002", "File delete failed"),
-    INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "F003", "Invalid file type");
+    INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "F003", "Invalid file type"),
+
+    // Crew - 평가 대상자 관련 에러
+    CREW_INFO_FETCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "C007", "Failed to fetch crew information");
 
     /** HTTP 상태 코드 */
     private final HttpStatus status;

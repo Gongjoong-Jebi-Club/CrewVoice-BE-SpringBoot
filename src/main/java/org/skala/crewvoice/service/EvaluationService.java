@@ -6,11 +6,16 @@ import org.skala.crewvoice.domain.Evaluation;
 import org.skala.crewvoice.domain.EvaluationType;
 import org.skala.crewvoice.dto.request.EvaluationCreateRequest;
 import org.skala.crewvoice.dto.response.EvaluationCreateResponse;
+import org.skala.crewvoice.dto.response.EvaluationListResponse;
+import org.skala.crewvoice.dto.response.EvaluationResponse;
 import org.skala.crewvoice.repository.EvaluationRepository;
+import org.skala.crewvoice.repository.FinalGradeRepository;
+import org.skala.crewvoice.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * 평가(시험) 비즈니스 로직 처리 서비스
@@ -22,6 +27,9 @@ import java.math.BigDecimal;
 public class EvaluationService {
 
     private final EvaluationRepository evaluationRepository;
+    private final FinalGradeRepository finalGradeRepository;
+    private final UserRepository userRepository;
+
 
     /**
      * 평가(시험) 생성
@@ -62,5 +70,35 @@ public class EvaluationService {
 
         // 5. 응답 DTO 반환
         return EvaluationCreateResponse.from(savedEvaluation.getEvaluationId());
+    }
+
+    /**
+     * 전체 평가 목록 조회
+     *
+     * @return 평가 목록 (targetCount, completedCount 포함)
+     */
+    public EvaluationListResponse getAllEvaluations() {
+        log.info("전체 평가 목록 조회 시작");
+
+        // 1. 모든 평가 조회 (최신순)
+        List<Evaluation> evaluations = evaluationRepository.findAllByOrderByCreatedAtDesc();
+
+        // 2. 평가 생성 시점의 피평가자 수 계산
+        // (현재 시스템에서는 시험 생성 시점의 ACTIVE 상태 CREW 수를 사용)
+        Integer targetCount = userRepository.countActiveCrewMembers();
+
+        // 3. 각 평가별로 완료자 수를 조회하고 Response DTO 생성
+        List<EvaluationResponse> responseList = evaluations.stream()
+                .map(evaluation -> {
+                    Integer completedCount = finalGradeRepository.countByEvaluationId(
+                            evaluation.getEvaluationId()
+                    );
+                    return EvaluationResponse.of(evaluation, targetCount, completedCount);
+                })
+                .toList();
+
+        log.info("전체 평가 목록 조회 완료 - 총 {}개", responseList.size());
+
+        return EvaluationListResponse.of(responseList);
     }
 }

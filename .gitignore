@@ -219,3 +219,6 @@ $RECYCLE.BIN/
 
 # Custom
 .env
+CLAUDE.md
+docs/
+

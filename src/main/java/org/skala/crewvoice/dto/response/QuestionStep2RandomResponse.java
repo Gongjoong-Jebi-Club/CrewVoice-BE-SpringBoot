@@ -9,11 +9,13 @@ import org.skala.crewvoice.domain.QuestionStep2;
 @NoArgsConstructor
 @AllArgsConstructor
 public class QuestionStep2RandomResponse {
+    private Long questionId;
     private String situationDescription;
     private String aircraftType;
 
     public static QuestionStep2RandomResponse from(QuestionStep2 question) {
         return new QuestionStep2RandomResponse(
+                question.getId(),
                 question.getSituationDescription(),
                 question.getAircraftType()
         );

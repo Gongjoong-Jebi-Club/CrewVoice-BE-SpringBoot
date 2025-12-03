@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.skala.crewvoice.domain.QuestionStep3;
+import org.skala.crewvoice.util.DateFormatter;
 
 @Getter
 @NoArgsConstructor
@@ -24,7 +25,7 @@ public class QuestionStep3ListResponse {
                 question.getAircraftType(),
                 question.getArrival(),
                 question.getDeparture(),
-                question.getBoardingDate(),
+                DateFormatter.formatToMMdd(question.getBoardingDate()),
                 question.getExplanation()
         );
     }

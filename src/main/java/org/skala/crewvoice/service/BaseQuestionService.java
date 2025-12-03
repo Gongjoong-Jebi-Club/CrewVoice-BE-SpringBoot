@@ -6,6 +6,7 @@ import org.skala.crewvoice.exception.custom.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public abstract class BaseQuestionService {
 
     /**
      * 페이지네이션을 적용한 문제 목록 조회 (공통 로직)
+     * question_id 기준 오름차순 정렬
      *
      * @param pageNumber 페이지 번호 (1-based)
      * @param repository JPA Repository
@@ -31,7 +33,7 @@ public abstract class BaseQuestionService {
      * @return DTO 리스트
      */
     protected <T, R> List<R> getQuestions(int pageNumber, JpaRepository<T, Long> repository, Function<T, R> mapper) {
-        Pageable pageable = PageRequest.of(pageNumber - 1, PAGE_SIZE);
+        Pageable pageable = PageRequest.of(pageNumber - 1, PAGE_SIZE, Sort.by("id").ascending());
         Page<T> questionsPage = repository.findAll(pageable);
 
         return questionsPage.getContent()

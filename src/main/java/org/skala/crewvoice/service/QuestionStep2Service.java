@@ -42,32 +42,23 @@ public class QuestionStep2Service extends BaseQuestionService {
 
     @Transactional
     public QuestionEditResponse saveOrUpdateQuestion(QuestionStep2Request request) {
-        // questionId가 null이면 추가, 값이 있으면 수정
-        if (request.getQuestionId() == null) {
-            // 문제 추가
-            QuestionStep2 newQuestion = new QuestionStep2(
-                    request.getSituationDescription(),
-                    request.getAircraftType(),
-                    request.getScriptKorean(),
-                    request.getScriptEnglish(),
-                    request.getExplanation()
-            );
-            QuestionStep2 savedQuestion = questionStep2Repository.save(newQuestion);
-            return new QuestionEditResponse(savedQuestion.getId());
-        } else {
-            // 문제 수정
-            QuestionStep2 question = questionStep2Repository.findById(request.getQuestionId())
-                    .orElseThrow(() -> new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND));
-
-            question.update(
-                    request.getSituationDescription(),
-                    request.getAircraftType(),
-                    request.getScriptKorean(),
-                    request.getScriptEnglish(),
-                    request.getExplanation()
-            );
-
-            return new QuestionEditResponse(question.getId());
-        }
+        return saveOrUpdateQuestion(
+                request.getQuestionId(),
+                questionStep2Repository,
+                () -> new QuestionStep2(
+                        request.getSituationDescription(),
+                        request.getAircraftType(),
+                        request.getScriptKorean(),
+                        request.getScriptEnglish(),
+                        request.getExplanation()
+                ),
+                question -> question.update(
+                        request.getSituationDescription(),
+                        request.getAircraftType(),
+                        request.getScriptKorean(),
+                        request.getScriptEnglish(),
+                        request.getExplanation()
+                )
+        );
     }
 }

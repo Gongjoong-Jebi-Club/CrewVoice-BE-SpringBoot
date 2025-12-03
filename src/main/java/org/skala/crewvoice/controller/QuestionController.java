@@ -9,6 +9,7 @@ import org.skala.crewvoice.common.ApiResponse;
 import org.skala.crewvoice.dto.request.QuestionRequest;
 import org.skala.crewvoice.dto.request.QuestionStep2Request;
 import org.skala.crewvoice.dto.request.QuestionStep3RandomRequest;
+import org.skala.crewvoice.dto.request.QuestionStep3Request;
 import org.skala.crewvoice.dto.response.QuestionEditResponse;
 import org.skala.crewvoice.dto.response.QuestionResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2DetailResponse;
@@ -120,6 +121,22 @@ public class QuestionController {
     public ResponseEntity<ApiResponse<QuestionStep3DetailResponse>> getStep3QuestionById(@PathVariable Long questionId) {
         QuestionStep3DetailResponse response = questionStep3Service.getQuestionById(questionId);
         ApiResponse<QuestionStep3DetailResponse> apiResponse = ApiResponse.success(response);
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @Operation(summary = "STEP3 문제 편집", description = "문제은행의 STEP3 문제 추가/수정 화면에서 문제를 편집합니다. questionId가 null이면 추가, 값이 있으면 수정합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요청이 성공했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "사용자의 로그인 검증을 실패했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "문제를 찾을 수 없습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @PostMapping("/step3/edit")
+    public ResponseEntity<ApiResponse<QuestionEditResponse>> editStep3Question(@RequestBody QuestionStep3Request request) {
+        QuestionEditResponse response = questionStep3Service.saveOrUpdateQuestion(request);
+        ApiResponse<QuestionEditResponse> apiResponse = ApiResponse.success(response);
         return ResponseEntity.ok(apiResponse);
     }
 

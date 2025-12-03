@@ -1,5 +1,6 @@
 package org.skala.crewvoice.service;
 
+import org.skala.crewvoice.dto.response.QuestionEditResponse;
 import org.skala.crewvoice.exception.ErrorCode;
 import org.skala.crewvoice.exception.custom.EntityNotFoundException;
 import org.springframework.data.domain.Page;
@@ -8,7 +9,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -50,5 +53,43 @@ public abstract class BaseQuestionService {
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND));
 
         return mapper.apply(question);
+    }
+
+    /**
+     * 문제 추가/수정 (공통 로직)
+     *
+     * @param questionId      문제 ID (null이면 추가, 값이 있으면 수정)
+     * @param repository      JPA Repository
+     * @param entityCreator   새 Entity 생성 함수 (추가 시 사용)
+     * @param updateLogic     기존 Entity 업데이트 로직 (수정 시 사용)
+     * @return QuestionEditResponse (저장/수정된 문제 ID 포함)
+     */
+    protected <T> QuestionEditResponse saveOrUpdateQuestion(
+            Long questionId,
+            JpaRepository<T, Long> repository,
+            Supplier<T> entityCreator,
+            Consumer<T> updateLogic
+    ) {
+        if (questionId == null) {
+            // 문제 추가
+            T newQuestion = entityCreator.get();
+            T savedQuestion = repository.save(newQuestion);
+
+            // Entity에서 ID를 가져오기 위한 리플렉션 (모든 Question 엔티티는 getId() 메서드를 가짐)
+            try {
+                Long id = (Long) savedQuestion.getClass().getMethod("getId").invoke(savedQuestion);
+                return new QuestionEditResponse(id);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to get question ID", e);
+            }
+        } else {
+            // 문제 수정
+            T question = repository.findById(questionId)
+                    .orElseThrow(() -> new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND));
+
+            updateLogic.accept(question);
+
+            return new QuestionEditResponse(questionId);
+        }
     }
 }

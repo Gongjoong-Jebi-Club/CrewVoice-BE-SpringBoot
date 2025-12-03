@@ -2,6 +2,8 @@ package org.skala.crewvoice.service;
 
 import org.skala.crewvoice.domain.QuestionStep3;
 import org.skala.crewvoice.dto.request.QuestionStep3RandomRequest;
+import org.skala.crewvoice.dto.request.QuestionStep3Request;
+import org.skala.crewvoice.dto.response.QuestionEditResponse;
 import org.skala.crewvoice.dto.response.QuestionStep3DetailResponse;
 import org.skala.crewvoice.dto.response.QuestionStep3ListResponse;
 import org.skala.crewvoice.dto.response.QuestionStep3RandomResponse;
@@ -47,5 +49,33 @@ public class QuestionStep3Service extends BaseQuestionService {
         newQuestionIdList.add(question.getId());
 
         return QuestionStep3RandomResponse.of(newQuestionIdList, question);
+    }
+
+    @Transactional
+    public QuestionEditResponse saveOrUpdateQuestion(QuestionStep3Request request) {
+        return saveOrUpdateQuestion(
+                request.getQuestionId(),
+                questionStep3Repository,
+                () -> new QuestionStep3(
+                        request.getSituationDescription(),
+                        request.getAircraftType(),
+                        request.getDeparture(),
+                        request.getArrival(),
+                        request.getBoardingDate(),
+                        request.getScriptKorean(),
+                        request.getScriptEnglish(),
+                        request.getExplanation()
+                ),
+                question -> question.update(
+                        request.getSituationDescription(),
+                        request.getAircraftType(),
+                        request.getDeparture(),
+                        request.getArrival(),
+                        request.getBoardingDate(),
+                        request.getScriptKorean(),
+                        request.getScriptEnglish(),
+                        request.getExplanation()
+                )
+        );
     }
 }

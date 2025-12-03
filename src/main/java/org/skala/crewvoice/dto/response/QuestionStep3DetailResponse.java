@@ -15,6 +15,8 @@ public class QuestionStep3DetailResponse {
     private String arrival;
     private String boardingDate;
     private String situationDescription;
+    private String scriptKorean;
+    private String scriptEnglish;
     private String explanation;
 
     public static QuestionStep3DetailResponse from(QuestionStep3 question) {
@@ -24,6 +26,8 @@ public class QuestionStep3DetailResponse {
                 question.getArrival(),
                 DateFormatter.formatToMMdd(question.getBoardingDate()),
                 question.getSituationDescription(),
+                question.getScriptKorean(),
+                question.getScriptEnglish(),
                 question.getExplanation()
         );
     }

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.skala.crewvoice.domain.QuestionStep3;
+import org.skala.crewvoice.util.DateFormatter;
 
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class QuestionStep3RandomResponse {
                 question.getAircraftType(),
                 question.getDeparture(),
                 question.getArrival(),
-                question.getBoardingDate()
+                DateFormatter.formatToMMdd(question.getBoardingDate())
         );
     }
 }

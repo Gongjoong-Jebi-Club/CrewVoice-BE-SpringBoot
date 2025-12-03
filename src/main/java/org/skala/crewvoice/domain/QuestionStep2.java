@@ -43,9 +43,11 @@ public class QuestionStep2 extends BaseTimeEntity {
         this.isUsed = "MOCK";
     }
 
-    public void update(String situationDescription, String aircraftType, String explanation) {
+    public void update(String situationDescription, String aircraftType, String scriptKorean, String scriptEnglish, String explanation) {
         this.situationDescription = situationDescription;
         this.aircraftType = aircraftType;
+        this.scriptKorean = scriptKorean;
+        this.scriptEnglish = scriptEnglish;
         this.explanation = explanation;
     }
 }

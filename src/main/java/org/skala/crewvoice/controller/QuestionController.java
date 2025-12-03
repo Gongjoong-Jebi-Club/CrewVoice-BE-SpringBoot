@@ -8,12 +8,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.skala.crewvoice.common.ApiResponse;
 import org.skala.crewvoice.dto.request.QuestionRequest;
 import org.skala.crewvoice.dto.request.QuestionStep2Request;
+import org.skala.crewvoice.dto.request.QuestionStep3RandomRequest;
 import org.skala.crewvoice.dto.response.QuestionEditResponse;
 import org.skala.crewvoice.dto.response.QuestionResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2DetailResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2RandomResponse;
+import org.skala.crewvoice.dto.response.QuestionStep3RandomResponse;
 import org.skala.crewvoice.service.QuestionService;
 import org.skala.crewvoice.service.QuestionStep2Service;
+import org.skala.crewvoice.service.QuestionStep3Service;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,10 +29,12 @@ public class QuestionController {
 
     private final QuestionService questionService;
     private final QuestionStep2Service questionStep2Service;
+    private final QuestionStep3Service questionStep3Service;
 
-    public QuestionController(QuestionService questionService, QuestionStep2Service questionStep2Service) {
+    public QuestionController(QuestionService questionService, QuestionStep2Service questionStep2Service, QuestionStep3Service questionStep3Service) {
         this.questionService = questionService;
         this.questionStep2Service = questionStep2Service;
+        this.questionStep3Service = questionStep3Service;
     }
 
     @Operation(summary = "STEP2 문제 목록 조회", description = "STEP2의 문제를 리스트 형식으로 조회합니다 (페이지당 10개).")
@@ -85,6 +90,20 @@ public class QuestionController {
     public ResponseEntity<ApiResponse<QuestionStep2RandomResponse>> getStep2RandomQuestion() {
         QuestionStep2RandomResponse response = questionStep2Service.getRandomQuestion();
         ApiResponse<QuestionStep2RandomResponse> apiResponse = ApiResponse.success(response);
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @Operation(summary = "STEP3 문제 조회 (출제)", description = "모의고사 Step3 문제 넘어갈 때마다 호출되는 API로, Step3의 문제를 하나 조회합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요청이 성공했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "사용자의 로그인 검증을 실패했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @PostMapping("/step3/random")
+    public ResponseEntity<ApiResponse<QuestionStep3RandomResponse>> getStep3RandomQuestion(@RequestBody QuestionStep3RandomRequest request) {
+        QuestionStep3RandomResponse response = questionStep3Service.getRandomQuestion(request);
+        ApiResponse<QuestionStep3RandomResponse> apiResponse = ApiResponse.success(response);
         return ResponseEntity.ok(apiResponse);
     }
 }

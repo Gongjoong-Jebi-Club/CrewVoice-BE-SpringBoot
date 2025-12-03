@@ -1,102 +1,108 @@
 package org.skala.crewvoice.service;
 
-import io.awspring.cloud.s3.S3Template;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.skala.crewvoice.exception.ErrorCode;
+import org.skala.crewvoice.exception.custom.InvalidRequestException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.UUID;
+import java.time.Duration;
 
+/**
+ * AWS S3 관련 서비스 (AWS SDK v2)
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class S3Service {
 
-    private final S3Template s3Template;
+    private final S3Client s3Client;
+    private final S3Presigner s3Presigner;
 
-    @Value("${spring.cloud.aws.s3.bucket}")
+    @Value("${spring.cloud.aws.s3.bucket:crewvoice-audio-bucket}")
     private String bucketName;
 
-    @Value("${spring.cloud.aws.region.static}")
-    private String region;
-
     /**
-     * 파일 업로드
+     * S3 Object Key로 Pre-signed URL 생성 (AWS SDK v2)
+     *
+     * @param objectKey S3 Object Key
+     * @param expirationSeconds 만료 시간 (초)
+     * @return Pre-signed URL
      */
-    public String uploadFile(MultipartFile file) {
-        String fileName = generateFileName(file.getOriginalFilename());
-        String key = "audio/" + fileName;
+    public String generatePresignedUrl(String objectKey, int expirationSeconds) {
+        log.info("Pre-signed URL 생성 시작 - Bucket: {}, Key: {}, Expiration: {}초",
+                bucketName, objectKey, expirationSeconds);
 
         try {
-            s3Template.upload(bucketName, key, file.getInputStream());
-            log.info("File uploaded to S3: bucket={}, key={}", bucketName, key);
-            return key;
-        } catch (IOException e) {
-            log.error("Failed to upload file to S3", e);
-            throw new RuntimeException("S3 upload failed: " + e.getMessage(), e);
-        }
-    }
+            // GetObjectRequest 생성
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(objectKey)
+                    .build();
 
-    /**
-     * 파일 URL 생성
-     */
-    public String getFileUrl(String key) {
-        return String.format("https://%s.s3.%s.amazonaws.com/%s",
-                bucketName, region, key);
-    }
+            // Pre-signed URL 요청 생성
+            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                    .signatureDuration(Duration.ofSeconds(expirationSeconds))
+                    .getObjectRequest(getObjectRequest)
+                    .build();
 
-    /**
-     * 파일 다운로드
-     */
-    public InputStream downloadFile(String key) {
-        try {
-            return s3Template.download(bucketName, key).getInputStream();
+            // Pre-signed URL 생성
+            PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
+            String presignedUrl = presignedRequest.url().toString();
+
+            log.info("Pre-signed URL 생성 완료 - URL 길이: {}", presignedUrl.length());
+            return presignedUrl;
+
         } catch (Exception e) {
-            log.error("Failed to download file from S3: key={}", key, e);
-            throw new RuntimeException("S3 download failed: " + e.getMessage(), e);
+            log.error("Pre-signed URL 생성 실패 - Key: {}, Error: {}", objectKey, e.getMessage(), e);
+            throw new InvalidRequestException(ErrorCode.S3_PRESIGNED_URL_GENERATION_FAILED);
         }
     }
 
     /**
-     * 파일 삭제
+     * S3 Object 존재 여부 확인 (AWS SDK v2)
+     *
+     * @param objectKey S3 Object Key
+     * @return 존재 여부
      */
-    public void deleteFile(String key) {
+    public boolean doesObjectExist(String objectKey) {
         try {
-            s3Template.deleteObject(bucketName, key);
-            log.info("File deleted from S3: key={}", key);
-        } catch (Exception e) {
-            log.error("Failed to delete file from S3: key={}", key, e);
-            throw new RuntimeException("S3 delete failed: " + e.getMessage(), e);
-        }
-    }
+            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(objectKey)
+                    .build();
 
-    /**
-     * S3 연결 테스트
-     */
-    public boolean testConnection() {
-        try {
-            // 버킷 존재 여부 확인
-            s3Template.listObjects(bucketName, "");
-            log.info("S3 connection test successful: bucket={}", bucketName);
+            s3Client.headObject(headObjectRequest);
             return true;
+
+        } catch (NoSuchKeyException e) {
+            log.warn("S3 Object가 존재하지 않음 - Key: {}", objectKey);
+            return false;
         } catch (Exception e) {
-            log.error("S3 connection test failed: bucket={}", bucketName, e);
-            throw new RuntimeException("S3 connection test failed: " + e.getMessage(), e);
+            log.error("S3 Object 존재 확인 실패 - Key: {}, Error: {}", objectKey, e.getMessage(), e);
+            return false;
         }
     }
 
     /**
-     * 고유 파일명 생성
+     * S3 연결 테스트 (버킷 접근 확인)
      */
-    private String generateFileName(String originalFilename) {
-        String extension = "";
-        if (originalFilename != null && originalFilename.contains(".")) {
-            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+    public void testConnection() {
+        try {
+            // 버킷에 대한 헤드 요청으로 연결 확인
+            s3Client.listObjectsV2(builder -> builder.bucket(bucketName).maxKeys(1));
+            log.info("S3 연결 테스트 성공 - Bucket: {}", bucketName);
+        } catch (Exception e) {
+            log.error("S3 연결 테스트 실패 - Bucket: {}, Error: {}", bucketName, e.getMessage(), e);
+            throw new RuntimeException("S3 버킷에 접근할 수 없습니다: " + e.getMessage(), e);
         }
-        return UUID.randomUUID().toString() + extension;
     }
 }

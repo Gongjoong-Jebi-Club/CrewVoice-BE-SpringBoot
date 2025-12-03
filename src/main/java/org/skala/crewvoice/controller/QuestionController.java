@@ -13,6 +13,7 @@ import org.skala.crewvoice.dto.response.QuestionEditResponse;
 import org.skala.crewvoice.dto.response.QuestionResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2DetailResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2RandomResponse;
+import org.skala.crewvoice.dto.response.QuestionStep3ListResponse;
 import org.skala.crewvoice.dto.response.QuestionStep3RandomResponse;
 import org.skala.crewvoice.service.QuestionService;
 import org.skala.crewvoice.service.QuestionStep2Service;
@@ -91,6 +92,20 @@ public class QuestionController {
         QuestionStep2RandomResponse response = questionStep2Service.getRandomQuestion();
         ApiResponse<QuestionStep2RandomResponse> apiResponse = ApiResponse.success(response);
         return ResponseEntity.ok(apiResponse);
+    }
+
+    @Operation(summary = "STEP3 문제 목록 조회", description = "STEP3의 문제를 리스트 형식으로 조회합니다 (페이지당 10개).")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요청이 성공했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "STEP3 문제 목록 조회에 실패했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @GetMapping("/step3/list/{pageNumber}")
+    public ResponseEntity<ApiResponse<List<QuestionStep3ListResponse>>> getStep3Questions(@PathVariable int pageNumber) {
+        List<QuestionStep3ListResponse> questions = questionStep3Service.getStep3Questions(pageNumber);
+        ApiResponse<List<QuestionStep3ListResponse>> response = ApiResponse.success(questions);
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "STEP3 문제 조회 (출제)", description = "모의고사 Step3 문제 넘어갈 때마다 호출되는 API로, Step3의 문제를 하나 조회합니다.")

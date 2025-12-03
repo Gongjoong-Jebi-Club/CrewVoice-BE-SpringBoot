@@ -31,23 +31,28 @@ public class QuestionStep3 extends BaseTimeEntity {
     @Column(name = "boarding_date")
     private String boardingDate;
 
+    @Column(name = "explanation", columnDefinition = "TEXT")
+    private String explanation;
+
     @Column(name = "is_used", length = 10)
     private String isUsed;
 
-    public QuestionStep3(String situationDescription, String aircraftType, String departure, String arrival, String boardingDate) {
+    public QuestionStep3(String situationDescription, String aircraftType, String departure, String arrival, String boardingDate, String explanation) {
         this.situationDescription = situationDescription;
         this.aircraftType = aircraftType;
         this.departure = departure;
         this.arrival = arrival;
         this.boardingDate = boardingDate;
+        this.explanation = explanation;
         this.isUsed = "MOCK";
     }
 
-    public void update(String situationDescription, String aircraftType, String departure, String arrival, String boardingDate) {
+    public void update(String situationDescription, String aircraftType, String departure, String arrival, String boardingDate, String explanation) {
         this.situationDescription = situationDescription;
         this.aircraftType = aircraftType;
         this.departure = departure;
         this.arrival = arrival;
         this.boardingDate = boardingDate;
+        this.explanation = explanation;
     }
 }

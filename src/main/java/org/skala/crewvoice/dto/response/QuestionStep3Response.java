@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.skala.crewvoice.domain.QuestionStep3;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 /**
@@ -26,7 +25,7 @@ public class QuestionStep3Response {
     private String departure;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime boardingDate;
+    private String boardingDate;
 
     private String scriptKorean;
     private String scriptEnglish;

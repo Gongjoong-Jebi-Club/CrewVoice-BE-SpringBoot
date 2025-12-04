@@ -14,9 +14,9 @@ import lombok.Getter;
  * <p><b>응답 구조:</b>
  * <pre>
  * {
- *   "success": true/false,
- *   "data": { ... },        // 성공 시 데이터 (optional)
- *   "message": "메시지"      // 추가 메시지 (optional)
+ *   "code": 200,
+ *   "message": "요청이 성공했습니다.",
+ *   "data": { ... }        // 성공 시 데이터 (optional)
  * }
  * </pre>
  *
@@ -33,7 +33,7 @@ import lombok.Getter;
  * return ApiResponse.success();
  *
  * // 4. 에러 응답
- * return ApiResponse.error("잘못된 요청입니다");
+ * return ApiResponse.error(401, "인증에 실패했습니다");
  * }
  * </pre>
  *
@@ -44,36 +44,36 @@ import lombok.Getter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
 
-    /** 요청 성공 여부 */
-    private final boolean success;
+    /** HTTP 상태 코드 */
+    private final int code;
+
+    /** 응답 메시지 */
+    private final String message;
 
     /** 응답 데이터 */
     private final T data;
 
-    /** 추가 메시지 */
-    private final String message;
-
     /**
-     * 데이터와 함께 성공 응답을 생성합니다.
+     * 데이터와 함께 성공 응답을 생성합니다 (200 OK).
      *
      * @param data 응답 데이터
      * @param <T> 데이터 타입
      * @return 성공 응답
      */
     public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>(true, data, null);
+        return new ApiResponse<>(200, "요청이 성공했습니다.", data);
     }
 
     /**
      * 데이터와 메시지를 포함한 성공 응답을 생성합니다.
      *
      * @param data 응답 데이터
-     * @param message 추가 메시지
+     * @param message 커스텀 메시지
      * @param <T> 데이터 타입
      * @return 성공 응답
      */
     public static <T> ApiResponse<T> success(T data, String message) {
-        return new ApiResponse<>(true, data, message);
+        return new ApiResponse<>(200, message, data);
     }
 
     /**
@@ -83,29 +83,41 @@ public class ApiResponse<T> {
      * @return 성공 응답
      */
     public static ApiResponse<Void> success() {
-        return new ApiResponse<>(true, null, null);
+        return new ApiResponse<>(200, "요청이 성공했습니다.", null);
     }
 
     /**
-     * 에러 메시지를 포함한 실패 응답을 생성합니다.
+     * 에러 응답을 생성합니다.
      *
+     * @param code HTTP 상태 코드
      * @param message 에러 메시지
      * @return 실패 응답
      */
-    public static ApiResponse<Void> error(String message) {
-        return new ApiResponse<>(false, null, message);
+    public static ApiResponse<Void> error(int code, String message) {
+        return new ApiResponse<>(code, message, null);
     }
 
     /**
      * 에러 메시지와 데이터를 포함한 실패 응답을 생성합니다.
-     * 주로 유효성 검증 실패 시 검증 결과를 함께 반환할 때 사용합니다.
      *
+     * @param code HTTP 상태 코드
      * @param message 에러 메시지
      * @param data 에러 관련 데이터
      * @param <T> 데이터 타입
      * @return 실패 응답
      */
-    public static <T> ApiResponse<T> error(String message, T data) {
-        return new ApiResponse<>(false, data, message);
+    public static <T> ApiResponse<T> error(int code, String message, T data) {
+        return new ApiResponse<>(code, message, data);
+    }
+
+    /**
+     * 실패 응답을 생성합니다 (error의 alias).
+     *
+     * @param code HTTP 상태 코드
+     * @param message 에러 메시지
+     * @return 실패 응답
+     */
+    public static ApiResponse<Void> failure(int code, String message) {
+        return error(code, message);
     }
 }

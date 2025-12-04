@@ -14,7 +14,7 @@ import org.skala.crewvoice.domain.BaseTimeEntity;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class QuestionStep2 extends org.skala.crewvoice.domain.BaseTimeEntity {
+public class QuestionStep2 extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,4 +46,21 @@ public class QuestionStep2 extends org.skala.crewvoice.domain.BaseTimeEntity {
     @Column(name = "is_used", length = 10, nullable = false)
     @Builder.Default
     private String isUsed = "UNUSED";
+
+    public QuestionStep2(String situationDescription, String aircraftType, String scriptKorean, String scriptEnglish, String explanation) {
+        this.situationDescription = situationDescription;
+        this.aircraftType = aircraftType;
+        this.scriptKorean = scriptKorean;
+        this.scriptEnglish = scriptEnglish;
+        this.explanation = explanation;
+        this.isUsed = "MOCK";
+    }
+
+    public void update(String situationDescription, String aircraftType, String scriptKorean, String scriptEnglish, String explanation) {
+        this.situationDescription = situationDescription;
+        this.aircraftType = aircraftType;
+        this.scriptKorean = scriptKorean;
+        this.scriptEnglish = scriptEnglish;
+        this.explanation = explanation;
+    }
 }

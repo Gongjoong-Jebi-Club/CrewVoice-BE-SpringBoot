@@ -9,6 +9,8 @@ import org.skala.crewvoice.common.ApiResponse;
 import org.skala.crewvoice.domain.User;
 import org.skala.crewvoice.dto.response.MockExamResultResponse;
 import org.skala.crewvoice.dto.response.MockExamScoresResponse;
+import org.skala.crewvoice.dto.response.Step2ResultResponse;
+import org.skala.crewvoice.dto.response.Step3ResultResponse;
 import org.skala.crewvoice.service.MockExamResultService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -59,6 +61,38 @@ public class MockExamResultController {
     ) {
         MockExamScoresResponse result = mockExamResultService.getMockExamScores(user, evaluationId);
         ApiResponse<MockExamScoresResponse> response = ApiResponse.success(result);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "STEP2 평가 결과 상세 조회", description = "STEP2 평가 결과를 조회하는 API로, 6개 지표에 대한 각 점수와 STEP2의 총점을 받을 수 있다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요청이 성공했습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "STEP2의 결과 조회에 실패했습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 평가를 찾을 수 없습니다.")
+    })
+    @GetMapping("/{evaluationId}/step2-result")
+    public ResponseEntity<ApiResponse<Step2ResultResponse>> getStep2Result(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long evaluationId
+    ) {
+        Step2ResultResponse result = mockExamResultService.getStep2Result(user, evaluationId);
+        ApiResponse<Step2ResultResponse> response = ApiResponse.success(result);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "STEP3 평가 결과 상세 조회", description = "STEP3 평가 결과를 조회하는 API로, 6개 지표에 대한 각 점수와 STEP3의 총점을 받을 수 있다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요청이 성공했습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "사용자의 로그인 검증을 실패했습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 평가를 찾을 수 없습니다.")
+    })
+    @GetMapping("/{evaluationId}/step3-result")
+    public ResponseEntity<ApiResponse<Step3ResultResponse>> getStep3Result(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long evaluationId
+    ) {
+        Step3ResultResponse result = mockExamResultService.getStep3Result(user, evaluationId);
+        ApiResponse<Step3ResultResponse> response = ApiResponse.success(result);
         return ResponseEntity.ok(response);
     }
 }

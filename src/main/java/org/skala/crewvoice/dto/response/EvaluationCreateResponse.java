@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class EvaluationCreateResponse {
 
     @Schema(description = "생성된 평가 ID", example = "3")
-    private String id;
+    private String evaluationId;
 
     /**
      * Entity로부터 Response DTO 생성

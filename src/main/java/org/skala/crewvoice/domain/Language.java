@@ -12,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum Language {
 
-    KOREAN("kor", "한국어"),
-    ENGLISH("eng", "영어");
+    KOREAN("ko-KR", "한국어"),
+    ENGLISH("en-US", "영어");
 
     @JsonValue
     private final String code;

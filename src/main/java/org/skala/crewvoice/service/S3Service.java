@@ -27,7 +27,7 @@ public class S3Service {
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
 
-    @Value("${spring.cloud.aws.s3.bucket:crewvoice-audio-bucket}")
+    @Value("${spring.cloud.aws.s3.bucket:crewvoice-bucket}")
     private String bucketName;
 
     /**

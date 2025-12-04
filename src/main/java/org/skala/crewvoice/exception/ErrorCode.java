@@ -72,7 +72,7 @@ public enum ErrorCode {
     SUBMISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "R006", "해당 사용자의 평가 제출 내역을 찾을 수 없습니다."),
     RECORDING_FILE_NOT_UPLOADED(HttpStatus.BAD_REQUEST, "R007", "요청한 언어의 음성 파일이 업로드되지 않았습니다."),
     RECORDING_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "R008", "S3에 저장된 음성 파일을 찾을 수 없습니다."),
-    S3_PRESIGNED_URL_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "R009", "S3 다운로드 URL 생성에 실패했습니다.");
+    S3_PRESIGNED_URL_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "R009", "S3 다운로드 URL 생성에 실패했습니다."),
 
     // Question - 문제 관련 에러
     QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "Q001", "Question not found");

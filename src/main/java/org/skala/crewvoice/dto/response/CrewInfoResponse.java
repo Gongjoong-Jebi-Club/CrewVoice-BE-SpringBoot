@@ -22,32 +22,35 @@ import java.time.OffsetDateTime;
 public class CrewInfoResponse {
 
     @JsonProperty("id")
-    private String id;  // user_id를 String으로 변환
+    private String id;
 
     @JsonProperty("name")
     private String name;
 
-    @JsonProperty("employee_id")
+    @JsonProperty("employeeId")
     private String employeeId;
 
     @JsonProperty("state")
-    private Boolean state;  // 시험(평가) 시행 여부
+    private Boolean state;
 
-    @JsonProperty("completion_time")
+    @JsonProperty("completionTime")
     @JsonFormat(pattern = "yyyy.MM.dd HH:mm")
-    private OffsetDateTime completionTime;  // 시험 시행 시간
+    private OffsetDateTime completionTime;
 
-    @JsonProperty("step1_score")
+    @JsonProperty("step1Score")
     private BigDecimal step1Score;
 
-    @JsonProperty("step2_score")
-    private BigDecimal step2Score;
+    @JsonProperty("step2KorScore")
+    private BigDecimal step2KorScore;
 
-    @JsonProperty("step3_score")
-    private BigDecimal step3Score;
+    @JsonProperty("step2EngScore")
+    private BigDecimal step2EngScore;
 
-    @JsonProperty("total_score")
-    private BigDecimal totalScore;
+    @JsonProperty("step3KorScore")
+    private BigDecimal step3KorScore;
+
+    @JsonProperty("step3EngScore")
+    private BigDecimal step3EngScore;
 
     /**
      * User와 FinalGrade로부터 CrewInfoResponse 생성
@@ -60,12 +63,13 @@ public class CrewInfoResponse {
                 .id(String.valueOf(user.getId()))
                 .name(user.getName())
                 .employeeId(user.getEmployeeId())
-                .state(finalGrade != null)  // finalGrade가 있으면 true, 없으면 false
+                .state(finalGrade != null)
                 .completionTime(finalGrade != null ? finalGrade.getCreatedAt() : null)
                 .step1Score(finalGrade != null ? finalGrade.getStep1Score() : null)
-                .step2Score(finalGrade != null ? finalGrade.getStep2Score() : null)
-                .step3Score(finalGrade != null ? finalGrade.getStep3Score() : null)
-                .totalScore(finalGrade != null ? finalGrade.getTotalScore() : null)
+                .step2KorScore(finalGrade != null ? finalGrade.getStep2KorScore() : null)
+                .step2EngScore(finalGrade != null ? finalGrade.getStep2EngScore() : null)
+                .step3KorScore(finalGrade != null ? finalGrade.getStep3KorScore() : null)
+                .step3EngScore(finalGrade != null ? finalGrade.getStep3EngScore() : null)
                 .build();
     }
 }

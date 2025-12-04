@@ -31,21 +31,24 @@ public class FinalGrade extends BaseTimeEntity {
     @JoinColumn(name = "evaluation_id", nullable = false)
     private Evaluation evaluation;
 
-    @Column(name = "step1_score", precision = 5, scale = 2)
+    @Column(name = "step1_score", precision = 5, scale = 2, nullable = false)
     private BigDecimal step1Score;
 
-    @Column(name = "step2_score", precision = 5, scale = 2)
-    private BigDecimal step2Score;
+    @Column(name = "step2_kor_score", precision = 5, scale = 2, nullable = false)
+    private BigDecimal step2KorScore;
 
-    @Column(name = "step3_score", precision = 5, scale = 2)
-    private BigDecimal step3Score;
+    @Column(name = "step2_eng_score", precision = 5, scale = 2, nullable = false)
+    private BigDecimal step2EngScore;
 
-    @Column(name = "total_score", precision = 5, scale = 2)
-    private BigDecimal totalScore;
+    @Column(name = "step3_kor_score", precision = 5, scale = 2, nullable = false)
+    private BigDecimal step3KorScore;
 
-    @Column(name = "eng_grade", length = 2)
+    @Column(name = "step3_eng_score", precision = 5, scale = 2, nullable = false)
+    private BigDecimal step3EngScore;
+
+    @Column(name = "eng_grade", length = 2, nullable = false)
     private String engGrade;
 
-    @Column(name = "kor_grade", length = 2)
+    @Column(name = "kor_grade", length = 2, nullable = false)
     private String korGrade;
 }

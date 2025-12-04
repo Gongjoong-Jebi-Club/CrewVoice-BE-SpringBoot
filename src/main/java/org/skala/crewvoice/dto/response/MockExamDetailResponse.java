@@ -17,11 +17,24 @@ public class MockExamDetailResponse {
     private BigDecimal step3Score;
 
     public static MockExamDetailResponse from(FinalGrade finalGrade) {
+        // Calculate scores from individual components
+        BigDecimal totalScore = finalGrade.getStep1Score()
+                .add(finalGrade.getStep2KorScore())
+                .add(finalGrade.getStep2EngScore())
+                .add(finalGrade.getStep3KorScore())
+                .add(finalGrade.getStep3EngScore());
+
+        BigDecimal step2Score = finalGrade.getStep2KorScore()
+                .add(finalGrade.getStep2EngScore());
+
+        BigDecimal step3Score = finalGrade.getStep3KorScore()
+                .add(finalGrade.getStep3EngScore());
+
         return new MockExamDetailResponse(
-                finalGrade.getTotalScore(),
+                totalScore,
                 finalGrade.getStep1Score(),
-                finalGrade.getStep2Score(),
-                finalGrade.getStep3Score()
+                step2Score,
+                step3Score
         );
     }
 }

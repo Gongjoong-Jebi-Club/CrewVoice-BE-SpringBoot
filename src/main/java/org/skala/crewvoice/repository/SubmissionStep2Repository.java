@@ -19,7 +19,7 @@ public interface SubmissionStep2Repository extends JpaRepository<SubmissionStep2
      * @return Step2 제출 기록 리스트
      */
     @Query("SELECT s FROM SubmissionStep2 s " +
-            "WHERE s.user.id = :userId AND s.evaluation.id = :evaluationId")
+            "WHERE s.user.id = :userId AND s.evaluation.evaluationId = :evaluationId")
     List<SubmissionStep2> findByUserIdAndEvaluationId(
             @Param("userId") Long userId,
             @Param("evaluationId") Long evaluationId

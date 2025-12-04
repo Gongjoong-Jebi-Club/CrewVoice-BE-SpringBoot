@@ -3,7 +3,6 @@ package org.skala.crewvoice.controller;
 import org.skala.crewvoice.dto.request.ResetPasswordRequest;
 import org.skala.crewvoice.dto.response.ApiResponse;
 import org.skala.crewvoice.dto.response.DeleteUserResponse;
-
 import org.skala.crewvoice.dto.response.UserResponse;
 import org.skala.crewvoice.service.UserService;
 import org.springframework.http.ResponseEntity;

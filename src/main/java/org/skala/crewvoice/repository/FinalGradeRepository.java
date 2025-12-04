@@ -25,6 +25,12 @@ public interface FinalGradeRepository extends JpaRepository<FinalGrade, Long> {
      * @param evaluationId 평가 ID
      * @return 최종 성적
      */
-    @Query("SELECT fg FROM FinalGrade fg WHERE fg.user.id = :userId AND fg.evaluation.id = :evaluationId")
+    @Query("SELECT fg FROM FinalGrade fg WHERE fg.user.id = :userId AND fg.evaluation.evaluationId = :evaluationId")
     FinalGrade findByUserIdAndEvaluationId(@Param("userId") Long userId, @Param("evaluationId") Long evaluationId);
+
+    /**
+     * 특정 평가의 완료자 수 조회
+     */
+    @Query("SELECT COUNT(fg) FROM FinalGrade fg WHERE fg.evaluation.evaluationId = :evaluationId")
+    Integer countByEvaluationId(@Param("evaluationId") Long evaluationId);
 }

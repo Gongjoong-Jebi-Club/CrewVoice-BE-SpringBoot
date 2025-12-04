@@ -2,22 +2,29 @@ package org.skala.crewvoice.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
+/**
+ * STEP2 제출 내역 Entity
+ */
 @Entity
 @Table(name = "submissions_step2")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class SubmissionStep2 {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "submission_id")
-    private Long id;
+    private Long submissionId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -43,22 +50,9 @@ public class SubmissionStep2 {
     @Column(name = "audio_duration_english", precision = 6, scale = 2)
     private BigDecimal audioDurationEnglish;
 
-    @Column(name = "submitted_at", nullable = false)
-    private LocalDateTime submittedAt;
+    @Column(name = "submitted_at")
+    private OffsetDateTime submittedAt;
 
     @Column(name = "evaluated_at")
-    private LocalDateTime evaluatedAt;
-
-    public SubmissionStep2(User user, Evaluation evaluation, QuestionStep2 question,
-                           String audioFileKoreanUrl, String audioFileEnglishUrl,
-                           BigDecimal audioDurationKorean, BigDecimal audioDurationEnglish) {
-        this.user = user;
-        this.evaluation = evaluation;
-        this.question = question;
-        this.audioFileKoreanUrl = audioFileKoreanUrl;
-        this.audioFileEnglishUrl = audioFileEnglishUrl;
-        this.audioDurationKorean = audioDurationKorean;
-        this.audioDurationEnglish = audioDurationEnglish;
-        this.submittedAt = LocalDateTime.now();
-    }
+    private OffsetDateTime evaluatedAt;
 }

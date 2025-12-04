@@ -2,22 +2,29 @@ package org.skala.crewvoice.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
+/**
+ * STEP3 제출 내역 Entity
+ */
 @Entity
 @Table(name = "submissions_step3")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class SubmissionStep3 {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "submission_id")
-    private Long id;
+    private Long submissionId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -27,12 +34,11 @@ public class SubmissionStep3 {
     @JoinColumn(name = "evaluation_id", nullable = false)
     private Evaluation evaluation;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "question_id", nullable = false)
-    private QuestionStep3 question;
+    @Column(name = "question_id", nullable = false)
+    private Long questionId;
 
     @Column(name = "part_order", nullable = false)
-    private Integer partOrder;
+    private Integer partOrder;  // 1, 2, 3
 
     @Column(name = "audio_file_korean_url", columnDefinition = "TEXT", nullable = false)
     private String audioFileKoreanUrl;
@@ -46,23 +52,9 @@ public class SubmissionStep3 {
     @Column(name = "audio_duration_english", precision = 6, scale = 2)
     private BigDecimal audioDurationEnglish;
 
-    @Column(name = "submitted_at", nullable = false)
-    private LocalDateTime submittedAt;
+    @Column(name = "submitted_at")
+    private OffsetDateTime submittedAt;
 
     @Column(name = "evaluated_at")
-    private LocalDateTime evaluatedAt;
-
-    public SubmissionStep3(User user, Evaluation evaluation, QuestionStep3 question,
-                           Integer partOrder, String audioFileKoreanUrl, String audioFileEnglishUrl,
-                           BigDecimal audioDurationKorean, BigDecimal audioDurationEnglish) {
-        this.user = user;
-        this.evaluation = evaluation;
-        this.question = question;
-        this.partOrder = partOrder;
-        this.audioFileKoreanUrl = audioFileKoreanUrl;
-        this.audioFileEnglishUrl = audioFileEnglishUrl;
-        this.audioDurationKorean = audioDurationKorean;
-        this.audioDurationEnglish = audioDurationEnglish;
-        this.submittedAt = LocalDateTime.now();
-    }
+    private OffsetDateTime evaluatedAt;
 }

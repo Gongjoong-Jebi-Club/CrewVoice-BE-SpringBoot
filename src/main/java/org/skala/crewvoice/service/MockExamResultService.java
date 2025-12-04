@@ -127,16 +127,16 @@ public class MockExamResultService {
 
         // 첫 번째 제출 기록 사용 (보통 1개만 존재)
         SubmissionStep2 submission = submissions.get(0);
-        log.info("제출 기록 조회 성공 - submissionId: {}, 조회된 개수: {}", submission.getId(), submissions.size());
+        log.info("제출 기록 조회 성공 - submissionId: {}, 조회된 개수: {}", submission.getSubmissionId(), submissions.size());
 
         // 2. 평가 결과 조회 (한국어, 영어 2개)
         List<EvaluationStep2> evaluations = evaluationStep2Repository
-                .findBySubmissionId(submission.getId());
+                .findBySubmissionId(submission.getSubmissionId());
 
         log.info("평가 결과 조회 완료 - 조회된 개수: {}", evaluations.size());
 
         if (evaluations.size() != 2) {
-            log.error("평가 결과가 2개가 아님 - submissionId: {}, 조회된 개수: {}", submission.getId(), evaluations.size());
+            log.error("평가 결과가 2개가 아님 - submissionId: {}, 조회된 개수: {}", submission.getSubmissionId(), evaluations.size());
             throw new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND);
         }
 
@@ -145,7 +145,7 @@ public class MockExamResultService {
                 .filter(e -> "ko-KR".equalsIgnoreCase(e.getLanguage()))
                 .findFirst()
                 .orElseThrow(() -> {
-                    log.error("한국어 평가 결과를 찾을 수 없음 - submissionId: {}", submission.getId());
+                    log.error("한국어 평가 결과를 찾을 수 없음 - submissionId: {}", submission.getSubmissionId());
                     return new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND);
                 });
 
@@ -153,7 +153,7 @@ public class MockExamResultService {
                 .filter(e -> "en-US".equalsIgnoreCase(e.getLanguage()))
                 .findFirst()
                 .orElseThrow(() -> {
-                    log.error("영어 평가 결과를 찾을 수 없음 - submissionId: {}", submission.getId());
+                    log.error("영어 평가 결과를 찾을 수 없음 - submissionId: {}", submission.getSubmissionId());
                     return new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND);
                 });
 
@@ -191,13 +191,13 @@ public class MockExamResultService {
         for (SubmissionStep3 submission : submissions) {
             // 해당 submission의 평가 결과 조회 (한국어, 영어 2개)
             List<EvaluationStep3> evaluations = evaluationStep3Repository
-                    .findBySubmissionId(submission.getId());
+                    .findBySubmissionId(submission.getSubmissionId());
 
             log.info("Part {} 평가 결과 조회 완료 - 조회된 개수: {}", submission.getPartOrder(), evaluations.size());
 
             if (evaluations.size() != 2) {
                 log.error("평가 결과가 2개가 아님 - submissionId: {}, partOrder: {}, 조회된 개수: {}",
-                        submission.getId(), submission.getPartOrder(), evaluations.size());
+                        submission.getSubmissionId(), submission.getPartOrder(), evaluations.size());
                 throw new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND);
             }
 
@@ -207,7 +207,7 @@ public class MockExamResultService {
                     .findFirst()
                     .orElseThrow(() -> {
                         log.error("한국어 평가 결과를 찾을 수 없음 - submissionId: {}, partOrder: {}",
-                                submission.getId(), submission.getPartOrder());
+                                submission.getSubmissionId(), submission.getPartOrder());
                         return new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND);
                     });
 
@@ -216,7 +216,7 @@ public class MockExamResultService {
                     .findFirst()
                     .orElseThrow(() -> {
                         log.error("영어 평가 결과를 찾을 수 없음 - submissionId: {}, partOrder: {}",
-                                submission.getId(), submission.getPartOrder());
+                                submission.getSubmissionId(), submission.getPartOrder());
                         return new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND);
                     });
 

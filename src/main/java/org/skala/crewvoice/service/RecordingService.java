@@ -20,6 +20,8 @@ import org.skala.crewvoice.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * 녹음 파일 다운로드 관련 비즈니스 로직
  */
@@ -137,9 +139,14 @@ public class RecordingService {
      * STEP2 Object Key 추출
      */
     private String getStep2ObjectKey(RecordingDownloadRequest request) {
-        SubmissionStep2 submission = submissionStep2Repository
-                .findByUserIdAndEvaluationId(request.getUserId(), request.getEvaluationId())
-                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SUBMISSION_NOT_FOUND));
+        List<SubmissionStep2> submissions = submissionStep2Repository
+                .findByUserIdAndEvaluationId(request.getUserId(), request.getEvaluationId());
+
+        if (submissions.isEmpty()) {
+            throw new EntityNotFoundException(ErrorCode.SUBMISSION_NOT_FOUND);
+        }
+
+        SubmissionStep2 submission = submissions.get(0);
 
         // Language Enum의 selectUrl 메서드 활용
         String objectKey = request.getLanguage().selectUrl(

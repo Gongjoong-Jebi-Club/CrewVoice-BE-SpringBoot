@@ -1,6 +1,7 @@
 package org.skala.crewvoice.domain;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,10 +16,10 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "submissions_step3")
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class SubmissionStep3 extends BaseTimeEntity {
+public class SubmissionStep3 {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,10 +40,10 @@ public class SubmissionStep3 extends BaseTimeEntity {
     @Column(name = "part_order", nullable = false)
     private Integer partOrder;  // 1, 2, 3
 
-    @Column(name = "audio_file_korean_url", columnDefinition = "TEXT")
+    @Column(name = "audio_file_korean_url", columnDefinition = "TEXT", nullable = false)
     private String audioFileKoreanUrl;
 
-    @Column(name = "audio_file_english_url", columnDefinition = "TEXT")
+    @Column(name = "audio_file_english_url", columnDefinition = "TEXT", nullable = false)
     private String audioFileEnglishUrl;
 
     @Column(name = "audio_duration_korean", precision = 6, scale = 2)

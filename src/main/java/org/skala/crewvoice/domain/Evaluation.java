@@ -2,9 +2,10 @@ package org.skala.crewvoice.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Builder;
+
 import org.skala.crewvoice.exception.ErrorCode;
 import org.skala.crewvoice.exception.custom.InvalidRequestException;
 

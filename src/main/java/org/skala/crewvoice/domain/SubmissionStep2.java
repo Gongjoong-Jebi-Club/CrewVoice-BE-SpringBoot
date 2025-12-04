@@ -1,6 +1,7 @@
 package org.skala.crewvoice.domain;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,10 +16,10 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "submissions_step2")
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class SubmissionStep2 extends BaseTimeEntity {
+public class SubmissionStep2 {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,13 +34,14 @@ public class SubmissionStep2 extends BaseTimeEntity {
     @JoinColumn(name = "evaluation_id", nullable = false)
     private Evaluation evaluation;
 
-    @Column(name = "question_id", nullable = false)
-    private Long questionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "question_id", nullable = false)
+    private QuestionStep2 question;
 
-    @Column(name = "audio_file_korean_url", columnDefinition = "TEXT")
+    @Column(name = "audio_file_korean_url", columnDefinition = "TEXT", nullable = false)
     private String audioFileKoreanUrl;
 
-    @Column(name = "audio_file_english_url", columnDefinition = "TEXT")
+    @Column(name = "audio_file_english_url", columnDefinition = "TEXT", nullable = false)
     private String audioFileEnglishUrl;
 
     @Column(name = "audio_duration_korean", precision = 6, scale = 2)

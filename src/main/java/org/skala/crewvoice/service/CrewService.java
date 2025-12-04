@@ -55,8 +55,7 @@ public class CrewService {
                 .map(user -> {
                     // 해당 사용자의 해당 평가 성적 조회 (없을 수 있음)
                     FinalGrade finalGrade = finalGradeRepository
-                            .findByUserIdAndEvaluationId(user.getId(), evaluationId)
-                            .orElse(null);
+                            .findByUserIdAndEvaluationId(user.getId(), evaluationId);
 
                     return CrewInfoResponse.of(user, finalGrade);
                 })

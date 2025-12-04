@@ -47,6 +47,19 @@ public class QuestionStep2 extends BaseTimeEntity {
     @Builder.Default
     private String isUsed = "UNUSED";
 
+    @Column(name = "status", length = 10, nullable = false) //추가: 문제 상태 (ACTIVE, DELETED)
+    private String status;
+
+    // Soft Delete 처리
+    public void delete() {
+        this.status = "DELETED";
+    }
+
+    // 활성화 처리
+    public void activate() {
+        this.status = "ACTIVE";
+    }
+
     public QuestionStep2(String situationDescription, String aircraftType, String scriptKorean, String scriptEnglish, String explanation) {
         this.situationDescription = situationDescription;
         this.aircraftType = aircraftType;

@@ -3,10 +3,15 @@ package org.skala.crewvoice.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.skala.crewvoice.domain.QuestionStep1;
+import org.skala.crewvoice.domain.QuestionStep2;
+import org.skala.crewvoice.domain.QuestionStep3;
 import org.skala.crewvoice.dto.response.QuestionBankSummaryResponse;
+import org.skala.crewvoice.dto.response.QuestionDeleteResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2Response;
 import org.skala.crewvoice.dto.response.QuestionStep3Response;
 import org.skala.crewvoice.exception.ErrorCode;
+import org.skala.crewvoice.exception.custom.EntityNotFoundException;
 import org.skala.crewvoice.exception.custom.InvalidRequestException;
 import org.skala.crewvoice.repository.QuestionStep1Repository;
 import org.skala.crewvoice.repository.QuestionStep2Repository;
@@ -104,5 +109,120 @@ public class QuestionBankService {
         return QuestionBankSummaryResponse.builder()
                 .data(summaries)
                 .build();
+    }
+
+    /**
+     * ✅ 특정 문제 삭제 (Soft Delete) (API 17)
+     *
+     * status 컬럼을 'DELETED'로 변경하여 논리적 삭제 처리
+     * 오답노트 등에서 참조 오류를 방지하기 위해 soft delete 사용
+     *
+     * @param step STEP 구분 (step1, step2, step3)
+     * @param questionId 삭제할 문제 ID
+     * @return 삭제된 문제 ID
+     */
+    @Transactional
+    public QuestionDeleteResponse deleteQuestion(String step, Long questionId) {
+        log.info("[API 17] 문제 삭제 요청 - step: {}, questionId: {}", step, questionId);
+
+        // STEP 검증
+        if (!isValidStep(step)) {
+            log.error("유효하지 않은 STEP - step: {}", step);
+            throw new InvalidRequestException(ErrorCode.INVALID_QUESTION_STEP);
+        }
+
+        // STEP별 삭제 처리
+        switch (step.toLowerCase()) {
+            case "step1":
+                deleteStep1Question(questionId);
+                break;
+            case "step2":
+                deleteStep2Question(questionId);
+                break;
+            case "step3":
+                deleteStep3Question(questionId);
+                break;
+            default:
+                log.error("지원하지 않는 STEP - step: {}", step);
+                throw new InvalidRequestException(ErrorCode.INVALID_QUESTION_STEP);
+        }
+
+        log.info("[API 17] 문제 삭제 완료 - step: {}, questionId: {}", step, questionId);
+
+        return QuestionDeleteResponse.of(questionId);
+    }
+
+    /**
+     * STEP1 문제 삭제 (Soft Delete)
+     */
+    private void deleteStep1Question(Long questionId) {
+        QuestionStep1 question = questionStep1Repository.findById(questionId)
+                .orElseThrow(() -> {
+                    log.error("STEP1 문제를 찾을 수 없음 - questionId: {}", questionId);
+                    return new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND);
+                });
+
+        // 이미 삭제된 문제인지 확인
+        if ("DELETED".equals(question.getStatus())) {
+            log.warn("이미 삭제된 STEP1 문제 - questionId: {}", questionId);
+            throw new InvalidRequestException(ErrorCode.ALREADY_DELETED_QUESTION);
+        }
+
+        // Soft Delete 처리
+        question.delete();
+        log.info("STEP1 문제 삭제 완료 - questionId: {}", questionId);
+    }
+
+    /**
+     * STEP2 문제 삭제 (Soft Delete)
+     */
+    private void deleteStep2Question(Long questionId) {
+        QuestionStep2 question = questionStep2Repository.findById(questionId)
+                .orElseThrow(() -> {
+                    log.error("STEP2 문제를 찾을 수 없음 - questionId: {}", questionId);
+                    return new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND);
+                });
+
+        // 이미 삭제된 문제인지 확인
+        if ("DELETED".equals(question.getStatus())) {
+            log.warn("이미 삭제된 STEP2 문제 - questionId: {}", questionId);
+            throw new InvalidRequestException(ErrorCode.ALREADY_DELETED_QUESTION);
+        }
+
+        // Soft Delete 처리
+        question.delete();
+        log.info("STEP2 문제 삭제 완료 - questionId: {}", questionId);
+    }
+
+    /**
+     * STEP3 문제 삭제 (Soft Delete)
+     */
+    private void deleteStep3Question(Long questionId) {
+        QuestionStep3 question = questionStep3Repository.findById(questionId)
+                .orElseThrow(() -> {
+                    log.error("STEP3 문제를 찾을 수 없음 - questionId: {}", questionId);
+                    return new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND);
+                });
+
+        // 이미 삭제된 문제인지 확인
+        if ("DELETED".equals(question.getStatus())) {
+            log.warn("이미 삭제된 STEP3 문제 - questionId: {}", questionId);
+            throw new InvalidRequestException(ErrorCode.ALREADY_DELETED_QUESTION);
+        }
+
+        // Soft Delete 처리
+        question.delete();
+        log.info("STEP3 문제 삭제 완료 - questionId: {}", questionId);
+    }
+
+    /**
+     * STEP 유효성 검증
+     */
+    private boolean isValidStep(String step) {
+        if (step == null) {
+            return false;
+        }
+        String lowerStep = step.toLowerCase();
+        return lowerStep.equals("step1") || lowerStep.equals("step2") || lowerStep.equals("step3");
     }
 }

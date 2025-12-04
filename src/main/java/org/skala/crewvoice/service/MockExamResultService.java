@@ -4,12 +4,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.skala.crewvoice.domain.EvaluationStep2;
 import org.skala.crewvoice.domain.EvaluationStep3;
 import org.skala.crewvoice.domain.FinalGrade;
+import org.skala.crewvoice.domain.SubmissionStep1;
 import org.skala.crewvoice.domain.SubmissionStep2;
 import org.skala.crewvoice.domain.SubmissionStep3;
 import org.skala.crewvoice.domain.User;
 import org.skala.crewvoice.dto.response.MockExamDetailResponse;
 import org.skala.crewvoice.dto.response.MockExamResultResponse;
 import org.skala.crewvoice.dto.response.MockExamScoresResponse;
+import org.skala.crewvoice.dto.response.Step1QuestionResultResponse;
+import org.skala.crewvoice.dto.response.Step1ResultResponse;
 import org.skala.crewvoice.dto.response.Step2ResultResponse;
 import org.skala.crewvoice.dto.response.Step3PartResultResponse;
 import org.skala.crewvoice.dto.response.Step3ResultResponse;
@@ -18,6 +21,7 @@ import org.skala.crewvoice.exception.ErrorCode;
 import org.skala.crewvoice.repository.EvaluationStep2Repository;
 import org.skala.crewvoice.repository.EvaluationStep3Repository;
 import org.skala.crewvoice.repository.FinalGradeRepository;
+import org.skala.crewvoice.repository.SubmissionStep1Repository;
 import org.skala.crewvoice.repository.SubmissionStep2Repository;
 import org.skala.crewvoice.repository.SubmissionStep3Repository;
 import org.springframework.stereotype.Service;
@@ -33,17 +37,20 @@ import java.util.stream.Collectors;
 public class MockExamResultService {
 
     private final FinalGradeRepository finalGradeRepository;
+    private final SubmissionStep1Repository submissionStep1Repository;
     private final SubmissionStep2Repository submissionStep2Repository;
     private final EvaluationStep2Repository evaluationStep2Repository;
     private final SubmissionStep3Repository submissionStep3Repository;
     private final EvaluationStep3Repository evaluationStep3Repository;
 
     public MockExamResultService(FinalGradeRepository finalGradeRepository,
+                                 SubmissionStep1Repository submissionStep1Repository,
                                  SubmissionStep2Repository submissionStep2Repository,
                                  EvaluationStep2Repository evaluationStep2Repository,
                                  SubmissionStep3Repository submissionStep3Repository,
                                  EvaluationStep3Repository evaluationStep3Repository) {
         this.finalGradeRepository = finalGradeRepository;
+        this.submissionStep1Repository = submissionStep1Repository;
         this.submissionStep2Repository = submissionStep2Repository;
         this.evaluationStep2Repository = evaluationStep2Repository;
         this.submissionStep3Repository = submissionStep3Repository;
@@ -225,6 +232,39 @@ public class MockExamResultService {
 
         // 3. 응답 생성
         return Step3ResultResponse.of(user.getId(), parts);
+    }
+
+    /**
+     * STEP1 오답노트 조회
+     * 문제별 제출 기록과 정답 여부를 조회하여 반환
+     *
+     * @param user 현재 로그인한 사용자
+     * @param evaluationId 평가 ID
+     * @return Step1 오답노트 결과
+     */
+    public Step1ResultResponse getStep1Result(User user, Long evaluationId) {
+        log.info("Step1 오답노트 조회 시작 - userId: {}, evaluationId: {}", user.getId(), evaluationId);
+
+        // 1. 제출 기록 조회 (question_order 순으로 정렬, question도 함께 fetch)
+        List<SubmissionStep1> submissions = submissionStep1Repository
+                .findByUserIdAndEvaluationIdOrderByQuestionOrder(user.getId(), evaluationId);
+
+        if (submissions.isEmpty()) {
+            log.error("제출 기록을 찾을 수 없음 - userId: {}, evaluationId: {}", user.getId(), evaluationId);
+            throw new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND);
+        }
+
+        log.info("제출 기록 조회 성공 - 조회된 문제 개수: {}", submissions.size());
+
+        // 2. 각 제출 기록을 DTO로 변환
+        List<Step1QuestionResultResponse> questions = submissions.stream()
+                .map(Step1QuestionResultResponse::from)
+                .collect(Collectors.toList());
+
+        log.info("Step1 오답노트 조회 완료 - 총 문제 개수: {}", questions.size());
+
+        // 3. 응답 생성
+        return Step1ResultResponse.of(questions);
     }
 }
 

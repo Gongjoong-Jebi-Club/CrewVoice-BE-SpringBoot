@@ -74,6 +74,9 @@ public enum ErrorCode {
     RECORDING_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "R008", "S3에 저장된 음성 파일을 찾을 수 없습니다."),
     S3_PRESIGNED_URL_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "R009", "S3 다운로드 URL 생성에 실패했습니다.");
 
+    // Question - 문제 관련 에러
+    QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "Q001", "Question not found");
+
     /** HTTP 상태 코드 */
     private final HttpStatus status;
 

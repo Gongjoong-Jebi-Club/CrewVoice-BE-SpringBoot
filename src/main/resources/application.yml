@@ -7,8 +7,8 @@ spring:
   # Redis 설정
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
       password:
       timeout: 60000  # 연결 타임아웃 (ms)
       lettuce:
@@ -63,6 +63,13 @@ springdoc:
     display-request-duration: true
     doc-expansion: none
   show-actuator: false
+  api-docs:
+    path: /v3/api-docs
+  servers:
+    - url: http://localhost:8080
+      description: Local server
+    - url: https://server.crewvoice.cloud
+      description: Production server
 
 logging:
   level:

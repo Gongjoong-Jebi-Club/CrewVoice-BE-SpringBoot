@@ -40,7 +40,7 @@ public class QuestionStep1 extends BaseTimeEntity {
     @Column(name = "is_used", length = 10, nullable = false)
     private String isUsed;
 
-    @Column(name = "status", length = 10, nullable = false) //추가: 문제 상태 (ACTIVE, DELETED)
+    @Column(name = "status", length = 10, nullable = false) //추가: 문제 상태 (ACTIVE, INACTIVE)
     private String status;
 
      // Soft Delete 처리

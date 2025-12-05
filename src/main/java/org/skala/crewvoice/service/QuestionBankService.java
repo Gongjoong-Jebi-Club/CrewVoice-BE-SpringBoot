@@ -17,6 +17,7 @@ import org.skala.crewvoice.exception.custom.InvalidRequestException;
 import org.skala.crewvoice.repository.QuestionStep1Repository;
 import org.skala.crewvoice.repository.QuestionStep2Repository;
 import org.skala.crewvoice.repository.QuestionStep3Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.skala.crewvoice.dto.response.QuestionBankSummaryResponse.StepSummary;
@@ -24,6 +25,8 @@ import org.skala.crewvoice.dto.response.QuestionBankSummaryResponse.StepSummary;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -113,9 +116,9 @@ public class QuestionBankService {
     }
 
     /**
-     * ✅ 특정 문제 삭제 (Soft Delete) (API 17)
+     * ✅ 특정 문제 삭제 (Soft Delete) (API 17) - 리팩토링 버전
      *
-     * status 컬럼을 'DELETED'로 변경하여 논리적 삭제 처리
+     * status 컬럼을 'INACTIVE'로 변경하여 논리적 삭제 처리
      * 오답노트 등에서 참조 오류를 방지하기 위해 soft delete 사용
      *
      * @param step STEP 구분 (step1, step2, step3)
@@ -132,16 +135,21 @@ public class QuestionBankService {
             throw new InvalidRequestException(ErrorCode.INVALID_QUESTION_STEP);
         }
 
-        // STEP별 삭제 처리
-        switch (step.toLowerCase()) {
-            case "step1":
-                deleteStep1Question(questionId);
+        // STEP별 삭제 처리 - 통합 버전
+        String stepUpper = step.toUpperCase();
+
+        switch (stepUpper) {
+            case "STEP1":
+                deleteQuestionByStep(questionId, questionStep1Repository, stepUpper,
+                        QuestionStep1::getStatus, QuestionStep1::delete);
                 break;
-            case "step2":
-                deleteStep2Question(questionId);
+            case "STEP2":
+                deleteQuestionByStep(questionId, questionStep2Repository, stepUpper,
+                        QuestionStep2::getStatus, QuestionStep2::delete);
                 break;
-            case "step3":
-                deleteStep3Question(questionId);
+            case "STEP3":
+                deleteQuestionByStep(questionId, questionStep3Repository, stepUpper,
+                        QuestionStep3::getStatus, QuestionStep3::delete);
                 break;
             default:
                 log.error("지원하지 않는 STEP - step: {}", step);
@@ -154,66 +162,37 @@ public class QuestionBankService {
     }
 
     /**
-     * STEP1 문제 삭제 (Soft Delete)
+     * 문제 삭제 공통 로직 (Generic)
+     *
+     * @param questionId 삭제할 문제 ID
+     * @param repository 해당 STEP의 Repository
+     * @param stepName STEP 이름 (로그용)
+     * @param statusGetter Entity에서 status를 가져오는 메서드 참조
+     * @param deleteMethod Entity의 delete() 메서드 참조
+     * @param <T> Entity 타입 (QuestionStep1, QuestionStep2, QuestionStep3)
      */
-    private void deleteStep1Question(Long questionId) {
-        QuestionStep1 question = questionStep1Repository.findById(questionId)
+    private <T> void deleteQuestionByStep(
+            Long questionId,
+            JpaRepository<T, Long> repository,
+            String stepName,
+            Function<T, String> statusGetter,
+            Consumer<T> deleteMethod
+    ) {
+        T question = repository.findById(questionId)
                 .orElseThrow(() -> {
-                    log.error("STEP1 문제를 찾을 수 없음 - questionId: {}", questionId);
+                    log.error("{} 문제를 찾을 수 없음 - questionId: {}", stepName, questionId);
                     return new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND);
                 });
 
         // 이미 삭제된 문제인지 확인
-        if ("INACTIVE".equals(question.getStatus())) {
-            log.warn("이미 삭제된 STEP1 문제 - questionId: {}", questionId);
+        if ("INACTIVE".equals(statusGetter.apply(question))) {
+            log.warn("이미 삭제된 {} 문제 - questionId: {}", stepName, questionId);
             throw new InvalidRequestException(ErrorCode.ALREADY_DELETED_QUESTION);
         }
 
         // Soft Delete 처리
-        question.delete();
-        log.info("STEP1 문제 삭제 완료 - questionId: {}", questionId);
-    }
-
-    /**
-     * STEP2 문제 삭제 (Soft Delete)
-     */
-    private void deleteStep2Question(Long questionId) {
-        QuestionStep2 question = questionStep2Repository.findById(questionId)
-                .orElseThrow(() -> {
-                    log.error("STEP2 문제를 찾을 수 없음 - questionId: {}", questionId);
-                    return new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND);
-                });
-
-        // 이미 삭제된 문제인지 확인
-        if ("INACTIVE".equals(question.getStatus())) {
-            log.warn("이미 삭제된 STEP2 문제 - questionId: {}", questionId);
-            throw new InvalidRequestException(ErrorCode.ALREADY_DELETED_QUESTION);
-        }
-
-        // Soft Delete 처리
-        question.delete();
-        log.info("STEP2 문제 삭제 완료 - questionId: {}", questionId);
-    }
-
-    /**
-     * STEP3 문제 삭제 (Soft Delete)
-     */
-    private void deleteStep3Question(Long questionId) {
-        QuestionStep3 question = questionStep3Repository.findById(questionId)
-                .orElseThrow(() -> {
-                    log.error("STEP3 문제를 찾을 수 없음 - questionId: {}", questionId);
-                    return new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND);
-                });
-
-        // 이미 삭제된 문제인지 확인
-        if ("INACTIVE".equals(question.getStatus())) {
-            log.warn("이미 삭제된 STEP3 문제 - questionId: {}", questionId);
-            throw new InvalidRequestException(ErrorCode.ALREADY_DELETED_QUESTION);
-        }
-
-        // Soft Delete 처리
-        question.delete();
-        log.info("STEP3 문제 삭제 완료 - questionId: {}", questionId);
+        deleteMethod.accept(question);
+        log.info("{} 문제 삭제 완료 - questionId: {}", stepName, questionId);
     }
 
     /**

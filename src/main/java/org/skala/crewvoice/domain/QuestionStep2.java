@@ -47,7 +47,7 @@ public class QuestionStep2 extends BaseTimeEntity {
     @Builder.Default
     private String isUsed = "UNUSED";
 
-    @Column(name = "status", length = 10, nullable = false) //추가: 문제 상태 (ACTIVE, DELETED)
+    @Column(name = "status", length = 10, nullable = false) //추가: 문제 상태 (ACTIVE, INACTIVE)
     private String status;
 
     // Soft Delete 처리

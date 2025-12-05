@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.skala.crewvoice.common.ApiResponse;
+import org.skala.crewvoice.dto.request.QuestionStep1RandomRequest;
 import org.skala.crewvoice.dto.request.QuestionStep1Request;
 import org.skala.crewvoice.dto.request.QuestionStep2Request;
 import org.skala.crewvoice.dto.request.QuestionStep3RandomRequest;
@@ -13,6 +14,7 @@ import org.skala.crewvoice.dto.request.QuestionStep3Request;
 import org.skala.crewvoice.service.QuestionStep1Service;
 import org.skala.crewvoice.dto.response.QuestionEditResponse;
 import org.skala.crewvoice.dto.response.QuestionStep1DetailResponse;
+import org.skala.crewvoice.dto.response.QuestionStep1RandomResponse;
 import org.skala.crewvoice.dto.response.QuestionStep1Response;
 import org.skala.crewvoice.dto.response.QuestionStep2ListResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2DetailResponse;
@@ -82,6 +84,20 @@ public class QuestionController {
     public ResponseEntity<ApiResponse<QuestionStep1Response>> editStep1Question(@RequestBody QuestionStep1Request request) {
         QuestionStep1Response response = questionStep1Service.saveOrUpdateQuestion(request);
         ApiResponse<QuestionStep1Response> apiResponse = ApiResponse.success(response);
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @Operation(summary = "STEP1 문제 랜덤 조회 (출제)", description = "모의고사 Step1 문제 넘어갈 때마다 호출되는 API로, Step1 문제은행에서 랜덤으로 한 문제를 조회합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요청이 성공했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "사용자의 로그인 검증을 실패했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @PostMapping("/step1/random")
+    public ResponseEntity<ApiResponse<QuestionStep1RandomResponse>> getStep1RandomQuestion(@RequestBody QuestionStep1RandomRequest request) {
+        QuestionStep1RandomResponse response = questionStep1Service.getRandomQuestion(request);
+        ApiResponse<QuestionStep1RandomResponse> apiResponse = ApiResponse.success(response);
         return ResponseEntity.ok(apiResponse);
     }
 

@@ -39,6 +39,16 @@ public class QuestionStep1Service extends BaseQuestionService {
     }
 
     /**
+     * STEP1 특정 문제 정보 조회
+     *
+     * @param questionId 문제 ID
+     * @return STEP1 문제 상세 정보
+     */
+    public QuestionStep1DetailResponse getQuestionById(Long questionId) {
+        return getQuestionById(questionId, questionStep1Repository, QuestionStep1DetailResponse::from);
+    }
+
+    /**
      * STEP1 문제 추가 또는 수정
      * questionId가 null이면 추가, 값이 있으면 수정
      *

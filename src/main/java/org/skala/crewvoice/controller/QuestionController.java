@@ -57,6 +57,20 @@ public class QuestionController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "STEP1 특정 문제 정보 조회", description = "STEP1 문제 편집 페이지에서 수정 창에 기본값으로 들어갈 문제 정보를 조회합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요청이 성공했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "사용자의 로그인 검증을 실패했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @GetMapping("/step1/{questionId}")
+    public ResponseEntity<ApiResponse<QuestionStep1DetailResponse>> getStep1QuestionById(@PathVariable Long questionId) {
+        QuestionStep1DetailResponse response = questionStep1Service.getQuestionById(questionId);
+        ApiResponse<QuestionStep1DetailResponse> apiResponse = ApiResponse.success(response);
+        return ResponseEntity.ok(apiResponse);
+    }
+
     @Operation(summary = "STEP1 문제 편집", description = "문제은행의 STEP1 문제 추가/수정 화면에서 문제를 편집합니다. questionId가 null이면 추가, 값이 있으면 수정합니다.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요청이 성공했습니다.",

@@ -45,6 +45,10 @@ public class EvaluationResponse {
     @Schema(description = "평가 완료 인원 수", example = "10")
     private Integer completedCount;
 
+    @JsonProperty("evaluation_type")
+    @Schema(description = "평가 유형", example = "EXAM", allowableValues = {"EXAM", "MOCK"})
+    private String evaluationType; // 시험 타입 추가
+
     /**
      * Entity와 통계 정보로부터 Response DTO 생성
      */
@@ -56,6 +60,7 @@ public class EvaluationResponse {
                 .endDate(evaluation.getEndDate())
                 .targetCount(targetCount)
                 .completedCount(completedCount)
+                .evaluationType(evaluation.getEvaluationType().name())  // 시험 타입 추가
                 .build();
     }
 }

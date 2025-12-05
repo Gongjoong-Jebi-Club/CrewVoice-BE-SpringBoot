@@ -26,8 +26,22 @@ public class QuestionStep3Service extends BaseQuestionService {
         this.questionStep3Repository = questionStep3Repository;
     }
 
+    /**
+     * STEP3 문제 목록 조회 (ACTIVE 상태만, 페이지네이션)
+     *
+     * @param pageNumber 페이지 번호 (1-based)
+     * @return STEP3 문제 리스트
+     */
     public List<QuestionStep3ListResponse> getStep3Questions(int pageNumber) {
-        return getQuestions(pageNumber, questionStep3Repository, QuestionStep3ListResponse::from);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+                pageNumber - 1, 10);
+        org.springframework.data.domain.Page<QuestionStep3> questionsPage =
+                questionStep3Repository.findByStatus("ACTIVE", pageable);
+
+        return questionsPage.getContent()
+                .stream()
+                .map(QuestionStep3ListResponse::from)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     public QuestionStep3DetailResponse getQuestionById(Long questionId) {

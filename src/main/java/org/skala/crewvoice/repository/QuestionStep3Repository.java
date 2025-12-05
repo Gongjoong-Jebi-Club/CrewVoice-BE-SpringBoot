@@ -17,11 +17,13 @@ import java.util.Optional;
 public interface QuestionStep3Repository extends JpaRepository<QuestionStep3, Long> {
 
     /**
-     * 특정 상태의 STEP3 문제 조회 (생성일 기준 정렬)
+     * 특정 상태의 STEP3 문제 조회 (question_id 기준 정렬, 페이지네이션)
      * @param status 문제 상태 (ACTIVE, INACTIVE 등)
-     * @return STEP3 문제 리스트
+     * @param pageable 페이지 정보
+     * @return STEP3 문제 페이지
      */
-    List<QuestionStep3> findAllByStatusOrderByCreatedAtAsc(String status);
+    @Query("SELECT q FROM QuestionStep3 q WHERE q.status = :status ORDER BY q.questionId ASC")
+    org.springframework.data.domain.Page<QuestionStep3> findByStatus(@Param("status") String status, org.springframework.data.domain.Pageable pageable);
 
     // 랜덤 조회
     @Query(value = "SELECT * FROM questions_step3 WHERE (:isEmpty = true OR question_id NOT IN :excludedIds) ORDER BY RANDOM() LIMIT 1", nativeQuery = true)

@@ -11,14 +11,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.skala.crewvoice.dto.response.ApiResponse;
 import org.skala.crewvoice.dto.response.QuestionDeleteResponse;
-import org.skala.crewvoice.dto.response.QuestionListResponse;
 import org.skala.crewvoice.service.QuestionBankService;
 import org.skala.crewvoice.dto.response.QuestionBankSummaryResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * 문제 은행 관리 컨트롤러
@@ -32,26 +29,6 @@ import java.util.List;
 public class QuestionBankController {
 
     private final QuestionBankService questionBankService;
-
-    /**
-     * STEP2 또는 STEP3 문제 전체 리스트 조회
-     *
-     * @param step "step2" 또는 "step3"
-     * @return 문제 리스트
-     */
-    @Operation(summary = "STEP2/3 문제 리스트 조회",
-            description = "해당 STEP의 모든 ACTIVE 상태 문제를 조회합니다. (Pagination 없음)")
-    @GetMapping("/{step}")
-    public ResponseEntity<ApiResponse<QuestionListResponse>> getQuestions(
-            @Parameter(description = "조회할 STEP (step2 또는 step3)", required = true, example = "step2")
-            @PathVariable String step) {
-
-        log.info("GET /api/v1/questions/{} - 문제 리스트 조회 요청", step);
-
-        QuestionListResponse response = questionBankService.getQuestionsByStep(step);
-
-        return ResponseEntity.ok(ApiResponse.success(response));
-    }
 
     /**
      * API 13: 문제은행 기본 정보 조회

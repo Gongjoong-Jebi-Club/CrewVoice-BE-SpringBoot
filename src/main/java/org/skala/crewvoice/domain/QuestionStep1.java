@@ -14,7 +14,7 @@ public class QuestionStep1 extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "question_id")
-    private Long id;
+    private Long questionId;
 
     @Column(name = "question_text", columnDefinition = "TEXT", nullable = false)
     private String questionText;
@@ -65,5 +65,20 @@ public class QuestionStep1 extends BaseTimeEntity {
         this.explanation = explanation;
         this.isUsed = "MOCK";
         this.status = "ACTIVE";
+    }
+
+    /**
+     * 문제 정보 업데이트
+     */
+    public void updateQuestion(String questionText, String optionA, String optionB,
+                                String optionC, String optionD, String correctAnswer,
+                                String explanation) {
+        this.questionText = questionText;
+        this.optionA = optionA;
+        this.optionB = optionB;
+        this.optionC = optionC;
+        this.optionD = optionD;
+        this.correctAnswer = correctAnswer;
+        this.explanation = explanation;
     }
 }

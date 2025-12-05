@@ -6,11 +6,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.skala.crewvoice.common.ApiResponse;
-import org.skala.crewvoice.dto.request.QuestionRequest;
+import org.skala.crewvoice.dto.request.QuestionStep1Request;
 import org.skala.crewvoice.dto.request.QuestionStep2Request;
 import org.skala.crewvoice.dto.request.QuestionStep3RandomRequest;
 import org.skala.crewvoice.dto.request.QuestionStep3Request;
+import org.skala.crewvoice.service.QuestionStep1Service;
 import org.skala.crewvoice.dto.response.QuestionEditResponse;
+import org.skala.crewvoice.dto.response.QuestionStep1DetailResponse;
+import org.skala.crewvoice.dto.response.QuestionStep1Response;
 import org.skala.crewvoice.dto.response.QuestionStep2ListResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2DetailResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2RandomResponse;
@@ -29,12 +32,43 @@ import java.util.List;
 @RequestMapping("/api/v1/questions")
 public class QuestionController {
 
+    private final QuestionStep1Service questionStep1Service;
     private final QuestionStep2Service questionStep2Service;
     private final QuestionStep3Service questionStep3Service;
 
-    public QuestionController(QuestionStep2Service questionStep2Service, QuestionStep3Service questionStep3Service) {
+    public QuestionController(QuestionStep1Service questionStep1Service,
+                              QuestionStep2Service questionStep2Service, QuestionStep3Service questionStep3Service) {
+        this.questionStep1Service = questionStep1Service;
         this.questionStep2Service = questionStep2Service;
         this.questionStep3Service = questionStep3Service;
+    }
+
+    @Operation(summary = "STEP1 문제 목록 조회", description = "STEP1의 문제를 리스트 형식으로 조회합니다 (페이지당 10개).")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요청이 성공했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "문제 목록 조회에 실패했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @GetMapping("/step1/list/{pageNumber}")
+    public ResponseEntity<ApiResponse<List<QuestionStep1DetailResponse>>> getStep1Questions(@PathVariable int pageNumber) {
+        List<QuestionStep1DetailResponse> questions = questionStep1Service.getStep1Questions(pageNumber);
+        ApiResponse<List<QuestionStep1DetailResponse>> response = ApiResponse.success(questions);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "STEP1 문제 편집", description = "문제은행의 STEP1 문제 추가/수정 화면에서 문제를 편집합니다. questionId가 null이면 추가, 값이 있으면 수정합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요청이 성공했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "STEP1 문제 편집에 실패했습니다.",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @PostMapping("/step1/edit")
+    public ResponseEntity<ApiResponse<QuestionStep1Response>> editStep1Question(@RequestBody QuestionStep1Request request) {
+        QuestionStep1Response response = questionStep1Service.saveOrUpdateQuestion(request);
+        ApiResponse<QuestionStep1Response> apiResponse = ApiResponse.success(response);
+        return ResponseEntity.ok(apiResponse);
     }
 
     @Operation(summary = "STEP2 문제 목록 조회", description = "STEP2의 문제를 리스트 형식으로 조회합니다 (페이지당 10개).")

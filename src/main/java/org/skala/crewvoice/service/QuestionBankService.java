@@ -8,9 +8,6 @@ import org.skala.crewvoice.domain.QuestionStep2;
 import org.skala.crewvoice.domain.QuestionStep3;
 import org.skala.crewvoice.dto.response.QuestionBankSummaryResponse;
 import org.skala.crewvoice.dto.response.QuestionDeleteResponse;
-import org.skala.crewvoice.dto.response.QuestionListResponse;
-import org.skala.crewvoice.dto.response.QuestionStep2Response;
-import org.skala.crewvoice.dto.response.QuestionStep3Response;
 import org.skala.crewvoice.exception.ErrorCode;
 import org.skala.crewvoice.exception.custom.EntityNotFoundException;
 import org.skala.crewvoice.exception.custom.InvalidRequestException;
@@ -27,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * 문제 은행 관리 서비스
@@ -42,40 +38,6 @@ public class QuestionBankService {
     private final QuestionStep1Repository questionStep1Repository;
     private final QuestionStep2Repository questionStep2Repository;
     private final QuestionStep3Repository questionStep3Repository;
-
-    /**
-     * STEP2 또는 STEP3 문제 전체 리스트 조회
-     * @param step "step2" 또는 "step3"
-     * @return 문제 리스트 (DTO) - "questions" 배열로 래핑
-     */
-    public QuestionListResponse getQuestionsByStep(String step) {
-        log.info("문제 리스트 조회 시작: step={}", step);
-
-        if ("step2".equalsIgnoreCase(step)) {
-            List<QuestionStep2Response> responses = questionStep2Repository
-                    .findAllByStatusOrderByCreatedAtAsc("ACTIVE")
-                    .stream()
-                    .map(QuestionStep2Response::from)
-                    .collect(Collectors.toList());
-
-            log.info("STEP2 문제 조회 완료: 총 {}개", responses.size());
-            return QuestionListResponse.of(responses);
-
-        } else if ("step3".equalsIgnoreCase(step)) {
-            List<QuestionStep3Response> responses = questionStep3Repository
-                    .findAllByStatusOrderByCreatedAtAsc("ACTIVE")
-                    .stream()
-                    .map(QuestionStep3Response::from)
-                    .collect(Collectors.toList());
-
-            log.info("STEP3 문제 조회 완료: 총 {}개", responses.size());
-            return QuestionListResponse.of(responses);
-
-        } else {
-            log.error("유효하지 않은 step 값: {}", step);
-            throw new InvalidRequestException(ErrorCode.INVALID_INPUT_VALUE);
-        }
-    }
 
     /**
      * STEP별 문제 개수와 최종 수정 일자 조회

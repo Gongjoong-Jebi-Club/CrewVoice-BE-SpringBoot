@@ -70,24 +70,33 @@ public class CrewService {
     }
 
     /**
-     * 전체 피평가자(CREW)의 정보와 최신 등급 조회
+     * 전체 피평가자(CREW)의 정보와 최신 등급 조회 또는 검색
      *
-     * <p>관리자가 "피평가자 관리" 페이지에서 모든 CREW의 정보를 조회합니다.
-     * 각 피평가자의 가장 최신 FinalGrade를 조회하여 한국어/영어 등급을 함께 반환합니다.
+     * <p>관리자가 "피평가자 관리" 페이지에서 모든 CREW의 정보를 조회하거나 검색합니다.
+     * 각 피평가자의 가장 최신 EXAM 타입 FinalGrade를 조회하여 한국어/영어 등급을 함께 반환합니다.
      *
-     * @return 전체 피평가자 목록 (최신 등급 포함)
+     * @param keyword 검색 키워드 (이름 또는 사번, optional)
+     * @return 전체 또는 검색된 피평가자 목록 (최신 EXAM 등급 포함)
      */
-    public List<CrewManagementResponse> getAllCrewsWithLatestGrades() {
-        log.info("전체 피평가자 정보 조회 시작");
+    public List<CrewManagementResponse> getAllCrewsWithLatestGrades(String keyword) {
+        log.info("전체 피평가자 정보 조회 시작 - 검색 키워드: {}", keyword);
 
-        // 1. 모든 CREW 사용자 조회 (role='CREW')
-        List<User> allCrews = userRepository.findAllCrews();
-        log.info("전체 CREW 사용자 수: {}", allCrews.size());
+        // 1. 키워드 여부에 따라 적절한 Repository 메서드 호출
+        List<User> allCrews;
+        if (keyword == null || keyword.trim().isEmpty()) {
+            // 키워드 없으면 전체 CREW 조회
+            allCrews = userRepository.findAllCrews();
+            log.info("전체 CREW 사용자 수: {}", allCrews.size());
+        } else {
+            // 키워드 있으면 이름 또는 사번으로 검색 (이메일 제외)
+            allCrews = userRepository.searchCrewsByKeyword(keyword.trim());
+            log.info("검색된 CREW 사용자 수: {} (키워드: {})", allCrews.size(), keyword);
+        }
 
-        // 2. 각 CREW의 최신 FinalGrade 조회 및 Response DTO 생성
+        // 2. 각 CREW의 최신 EXAM 타입 FinalGrade 조회 및 Response DTO 생성
         List<CrewManagementResponse> responses = allCrews.stream()
                 .map(user -> {
-                    // 해당 사용자의 가장 최신 최종 성적 조회 (없을 수 있음)
+                    // 해당 사용자의 가장 최신 EXAM 타입 최종 성적 조회 (없을 수 있음)
                     FinalGrade latestGrade = finalGradeRepository
                             .findLatestByUserId(user.getId())
                             .orElse(null);
@@ -96,7 +105,7 @@ public class CrewService {
                 })
                 .toList();
 
-        log.info("전체 피평가자 정보 조회 완료 - 총 {}명 (등급 보유: {}명)",
+        log.info("피평가자 정보 조회 완료 - 총 {}명 (등급 보유: {}명)",
                 responses.size(),
                 responses.stream().filter(r -> !"등급없음".equals(r.getKorGrade())).count());
 

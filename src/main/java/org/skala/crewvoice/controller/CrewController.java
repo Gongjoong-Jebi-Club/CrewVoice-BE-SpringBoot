@@ -29,14 +29,16 @@ public class CrewController {
     private final CrewService crewService;
 
     /**
-     * 전체 피평가자 정보 조회 (관리자 전용)
+     * 전체 피평가자 정보 조회 및 검색 (관리자 전용)
      *
-     * <p>관리자가 "피평가자 관리" 페이지에서 모든 CREW의 정보를 조회합니다.
-     * 각 피평가자의 최신 한국어/영어 등급을 함께 반환합니다.
+     * <p>관리자가 "피평가자 관리" 페이지에서 모든 CREW의 정보를 조회하거나 검색합니다.
+     * 각 피평가자의 최신 EXAM 타입 한국어/영어 등급을 함께 반환합니다.
      *
-     * @return 전체 피평가자 목록 (최신 등급 포함)
+     * @param keyword 검색 키워드 (이름 또는 사번, optional)
+     * @return 전체 또는 검색된 피평가자 목록 (최신 EXAM 등급 포함)
      */
-    @Operation(summary = "전체 피평가자 정보 조회", description = "모든 CREW의 정보와 최신 등급을 조회합니다.")
+    @Operation(summary = "전체 피평가자 정보 조회 및 검색",
+               description = "모든 CREW의 정보와 최신 EXAM 등급을 조회합니다. 키워드로 이름 또는 사번을 검색할 수 있습니다.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "피평가자 정보를 성공적으로 조회했습니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증되지 않은 사용자입니다."),
@@ -45,12 +47,15 @@ public class CrewController {
     })
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-    public ResponseEntity<ApiResponse<List<CrewManagementResponse>>> getAllCrews() {
-        log.info("GET /api/v1/crews - 전체 피평가자 정보 조회 요청");
+    public ResponseEntity<ApiResponse<List<CrewManagementResponse>>> getAllCrews(
+            @Parameter(description = "검색 키워드 (이름 또는 사번)", required = false)
+            @RequestParam(required = false) String keyword
+    ) {
+        log.info("GET /api/v1/crews - 피평가자 정보 조회 요청 (keyword: {})", keyword);
 
-        List<CrewManagementResponse> responses = crewService.getAllCrewsWithLatestGrades();
+        List<CrewManagementResponse> responses = crewService.getAllCrewsWithLatestGrades(keyword);
 
-        log.info("전체 피평가자 정보 조회 성공 - 총 {}명", responses.size());
+        log.info("피평가자 정보 조회 성공 - 총 {}명", responses.size());
 
         return ResponseEntity.ok(ApiResponse.success(responses));
     }

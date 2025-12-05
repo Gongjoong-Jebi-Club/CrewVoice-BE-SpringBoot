@@ -21,13 +21,21 @@ public class QuestionStep1Service extends BaseQuestionService {
     private final QuestionStep1Repository questionStep1Repository;
 
     /**
-     * STEP1 문제 목록 조회 (페이지네이션)
+     * STEP1 문제 목록 조회 (ACTIVE 상태만, 페이지네이션)
      *
      * @param pageNumber 페이지 번호 (1-based)
      * @return STEP1 문제 리스트
      */
     public List<QuestionStep1DetailResponse> getStep1Questions(int pageNumber) {
-        return getQuestions(pageNumber, questionStep1Repository, QuestionStep1DetailResponse::from);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+                pageNumber - 1, 10);
+        org.springframework.data.domain.Page<QuestionStep1> questionsPage =
+                questionStep1Repository.findByStatus("ACTIVE", pageable);
+
+        return questionsPage.getContent()
+                .stream()
+                .map(QuestionStep1DetailResponse::from)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     /**
@@ -51,7 +59,7 @@ public class QuestionStep1Service extends BaseQuestionService {
                     request.getExplanation()
             );
             QuestionStep1 savedQuestion = questionStep1Repository.save(newQuestion);
-            return QuestionStep1Response.of(savedQuestion.getId());
+            return QuestionStep1Response.of(savedQuestion.getQuestionId());
         } else {
             // 기존 문제 수정
             QuestionStep1 existingQuestion = questionStep1Repository.findById(request.getQuestionId())
@@ -67,7 +75,7 @@ public class QuestionStep1Service extends BaseQuestionService {
                     request.getExplanation()
             );
 
-            return QuestionStep1Response.of(existingQuestion.getId());
+            return QuestionStep1Response.of(existingQuestion.getQuestionId());
         }
     }
 }

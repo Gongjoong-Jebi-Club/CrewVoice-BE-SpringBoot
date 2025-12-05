@@ -18,7 +18,7 @@ public class QuestionStep2DetailResponse {
 
     public static QuestionStep2DetailResponse from(QuestionStep2 question) {
         return new QuestionStep2DetailResponse(
-                question.getId(),
+                question.getQuestionId(),
                 question.getAircraftType(),
                 question.getSituationDescription(),
                 question.getScriptKorean(),

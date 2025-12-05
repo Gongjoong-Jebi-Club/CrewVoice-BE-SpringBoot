@@ -6,22 +6,20 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.skala.crewvoice.common.ApiResponse;
-import org.skala.crewvoice.dto.request.QuestionRequest;
 import org.skala.crewvoice.dto.request.QuestionStep1Request;
 import org.skala.crewvoice.dto.request.QuestionStep2Request;
 import org.skala.crewvoice.dto.request.QuestionStep3RandomRequest;
 import org.skala.crewvoice.dto.request.QuestionStep3Request;
+import org.skala.crewvoice.service.QuestionStep1Service;
 import org.skala.crewvoice.dto.response.QuestionEditResponse;
-import org.skala.crewvoice.dto.response.QuestionResponse;
 import org.skala.crewvoice.dto.response.QuestionStep1DetailResponse;
 import org.skala.crewvoice.dto.response.QuestionStep1Response;
+import org.skala.crewvoice.dto.response.QuestionStep2ListResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2DetailResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2RandomResponse;
 import org.skala.crewvoice.dto.response.QuestionStep3DetailResponse;
 import org.skala.crewvoice.dto.response.QuestionStep3ListResponse;
 import org.skala.crewvoice.dto.response.QuestionStep3RandomResponse;
-import org.skala.crewvoice.service.QuestionService;
-import org.skala.crewvoice.service.QuestionStep1Service;
 import org.skala.crewvoice.service.QuestionStep2Service;
 import org.skala.crewvoice.service.QuestionStep3Service;
 import org.springframework.http.ResponseEntity;
@@ -34,14 +32,12 @@ import java.util.List;
 @RequestMapping("/api/v1/questions")
 public class QuestionController {
 
-    private final QuestionService questionService;
     private final QuestionStep1Service questionStep1Service;
     private final QuestionStep2Service questionStep2Service;
     private final QuestionStep3Service questionStep3Service;
 
-    public QuestionController(QuestionService questionService, QuestionStep1Service questionStep1Service,
+    public QuestionController(QuestionStep1Service questionStep1Service,
                               QuestionStep2Service questionStep2Service, QuestionStep3Service questionStep3Service) {
-        this.questionService = questionService;
         this.questionStep1Service = questionStep1Service;
         this.questionStep2Service = questionStep2Service;
         this.questionStep3Service = questionStep3Service;
@@ -54,7 +50,7 @@ public class QuestionController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "문제 목록 조회에 실패했습니다.",
                     content = @Content(schema = @Schema(implementation = ApiResponse.class)))
     })
-    @GetMapping("/step1/{pageNumber}")
+    @GetMapping("/step1/list/{pageNumber}")
     public ResponseEntity<ApiResponse<List<QuestionStep1DetailResponse>>> getStep1Questions(@PathVariable int pageNumber) {
         List<QuestionStep1DetailResponse> questions = questionStep1Service.getStep1Questions(pageNumber);
         ApiResponse<List<QuestionStep1DetailResponse>> response = ApiResponse.success(questions);
@@ -83,9 +79,9 @@ public class QuestionController {
                     content = @Content(schema = @Schema(implementation = ApiResponse.class)))
     })
     @GetMapping("/step2/list/{pageNumber}")
-    public ResponseEntity<ApiResponse<List<QuestionResponse>>> getStep2Questions(@PathVariable int pageNumber) {
-        List<QuestionResponse> questions = questionStep2Service.getStep2Questions(pageNumber);
-        ApiResponse<List<QuestionResponse>> response = ApiResponse.success(questions);
+    public ResponseEntity<ApiResponse<List<QuestionStep2ListResponse>>> getStep2Questions(@PathVariable int pageNumber) {
+        List<QuestionStep2ListResponse> questions = questionStep2Service.getStep2Questions(pageNumber);
+        ApiResponse<List<QuestionStep2ListResponse>> response = ApiResponse.success(questions);
         return ResponseEntity.ok(response);
     }
 
@@ -117,14 +113,14 @@ public class QuestionController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @Operation(summary = "STEP2 문제 조회 (출제)", description = "Step2 문제 시작 시 호출되는 API로, Step2 문제은행에서 랜덤으로 한 문제를 조회합니다.")
+    @Operation(summary = "STEP2 문제 랜덤 조회 (출제)", description = "Step2 문제 시작 시 호출되는 API로, Step2 문제은행에서 랜덤으로 한 문제를 조회합니다.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공",
                     content = @Content(schema = @Schema(implementation = ApiResponse.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "사용자의 로그인 검증을 실패했습니다.",
                     content = @Content(schema = @Schema(implementation = ApiResponse.class)))
     })
-    @GetMapping("/step2")
+    @GetMapping("/step2/random")
     public ResponseEntity<ApiResponse<QuestionStep2RandomResponse>> getStep2RandomQuestion() {
         QuestionStep2RandomResponse response = questionStep2Service.getRandomQuestion();
         ApiResponse<QuestionStep2RandomResponse> apiResponse = ApiResponse.success(response);

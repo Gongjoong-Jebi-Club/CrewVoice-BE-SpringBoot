@@ -27,7 +27,7 @@ public class QuestionStep1DetailResponse {
 
     public static QuestionStep1DetailResponse from(QuestionStep1 question) {
         return new QuestionStep1DetailResponse(
-                question.getId(),
+                question.getQuestionId(),
                 question.getQuestionText(),
                 question.getOptionA(),
                 question.getOptionB(),

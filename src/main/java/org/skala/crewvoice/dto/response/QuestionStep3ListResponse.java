@@ -20,7 +20,7 @@ public class QuestionStep3ListResponse {
 
     public static QuestionStep3ListResponse from(QuestionStep3 question) {
         return new QuestionStep3ListResponse(
-                question.getId(),
+                question.getQuestionId(),
                 question.getSituationDescription(),
                 question.getAircraftType(),
                 question.getArrival(),

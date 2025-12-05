@@ -26,7 +26,7 @@ public class QuestionResponse {
 
     public static QuestionResponse from(QuestionStep2 question) {
         return new QuestionResponse(
-                String.valueOf(question.getId()),
+                String.valueOf(question.getQuestionId()),
                 question.getSituationDescription(),
                 question.getAircraftType(),
                 question.getExplanation()

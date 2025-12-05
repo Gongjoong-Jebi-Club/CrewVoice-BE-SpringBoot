@@ -52,4 +52,19 @@ public class QuestionStep1 extends BaseTimeEntity {
         this.explanation = explanation;
         this.isUsed = "MOCK";
     }
+
+    /**
+     * 문제 정보 업데이트
+     */
+    public void updateQuestion(String questionText, String optionA, String optionB,
+                                String optionC, String optionD, String correctAnswer,
+                                String explanation) {
+        this.questionText = questionText;
+        this.optionA = optionA;
+        this.optionB = optionB;
+        this.optionC = optionC;
+        this.optionD = optionD;
+        this.correctAnswer = correctAnswer;
+        this.explanation = explanation;
+    }
 }

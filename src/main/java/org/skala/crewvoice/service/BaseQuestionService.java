@@ -33,7 +33,7 @@ public abstract class BaseQuestionService {
      * @return DTO 리스트
      */
     protected <T, R> List<R> getQuestions(int pageNumber, JpaRepository<T, Long> repository, Function<T, R> mapper) {
-        Pageable pageable = PageRequest.of(pageNumber - 1, PAGE_SIZE, Sort.by("id").ascending());
+        Pageable pageable = PageRequest.of(pageNumber - 1, PAGE_SIZE, Sort.by("questionId").ascending());
         Page<T> questionsPage = repository.findAll(pageable);
 
         return questionsPage.getContent()

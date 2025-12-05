@@ -75,7 +75,10 @@ public enum ErrorCode {
     S3_PRESIGNED_URL_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "R009", "S3 다운로드 URL 생성에 실패했습니다."),
 
     // Question - 문제 관련 에러
-    QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "Q001", "Question not found");
+    QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "Q001", "문제를 찾을 수 없습니다."),
+    QUESTION_BANK_FETCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "Q002", "문제은행 정보를 불러오지 못했습니다."),
+    INVALID_QUESTION_STEP(HttpStatus.BAD_REQUEST, "Q003", "유효하지 않은 STEP입니다."),
+    ALREADY_DELETED_QUESTION(HttpStatus.BAD_REQUEST, "Q004", "이미 삭제된 문제입니다.");
 
     /** HTTP 상태 코드 */
     private final HttpStatus status;

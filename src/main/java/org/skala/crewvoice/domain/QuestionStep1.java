@@ -40,6 +40,19 @@ public class QuestionStep1 extends BaseTimeEntity {
     @Column(name = "is_used", length = 10, nullable = false)
     private String isUsed;
 
+    @Column(name = "status", length = 10, nullable = false) //추가: 문제 상태 (ACTIVE, INACTIVE)
+    private String status;
+
+     // Soft Delete 처리
+    public void delete() {
+        this.status = "INACTIVE";
+    }
+
+    // 활성화 처리
+    public void activate() {
+        this.status = "ACTIVE";
+    }
+
     public QuestionStep1(String questionText, String optionA, String optionB,
                          String optionC, String optionD, String correctAnswer,
                          String explanation) {
@@ -51,5 +64,6 @@ public class QuestionStep1 extends BaseTimeEntity {
         this.correctAnswer = correctAnswer;
         this.explanation = explanation;
         this.isUsed = "MOCK";
+        this.status = "ACTIVE";
     }
 }

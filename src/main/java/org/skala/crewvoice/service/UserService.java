@@ -1,9 +1,9 @@
 package org.skala.crewvoice.service;
 
 import org.skala.crewvoice.domain.User;
+import org.skala.crewvoice.domain.UserStatus;
 import org.skala.crewvoice.dto.request.ResetPasswordRequest;
 import org.skala.crewvoice.dto.response.DeleteUserResponse;
-import org.skala.crewvoice.domain.UserStatus;
 import org.skala.crewvoice.dto.response.UserResponse;
 import org.skala.crewvoice.exception.ErrorCode;
 import org.skala.crewvoice.exception.custom.EntityNotFoundException;

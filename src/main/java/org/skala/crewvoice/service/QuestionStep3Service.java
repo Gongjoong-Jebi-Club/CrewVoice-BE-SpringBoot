@@ -46,7 +46,7 @@ public class QuestionStep3Service extends BaseQuestionService {
 
         // 새로운 questionIdList 생성 (기존 리스트 + 현재 조회된 questionId)
         List<Long> newQuestionIdList = new ArrayList<>(excludedIds);
-        newQuestionIdList.add(question.getId());
+        newQuestionIdList.add(question.getQuestionId());
 
         return QuestionStep3RandomResponse.of(newQuestionIdList, question);
     }

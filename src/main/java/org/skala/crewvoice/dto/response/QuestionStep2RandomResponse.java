@@ -15,7 +15,7 @@ public class QuestionStep2RandomResponse {
 
     public static QuestionStep2RandomResponse from(QuestionStep2 question) {
         return new QuestionStep2RandomResponse(
-                question.getId(),
+                question.getQuestionId(),
                 question.getSituationDescription(),
                 question.getAircraftType()
         );

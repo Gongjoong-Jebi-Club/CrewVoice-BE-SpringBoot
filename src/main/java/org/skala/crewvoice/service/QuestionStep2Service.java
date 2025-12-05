@@ -4,7 +4,7 @@ import org.skala.crewvoice.domain.QuestionStep2;
 import org.skala.crewvoice.dto.request.QuestionStep2Request;
 import org.skala.crewvoice.dto.request.QuestionStep2UpdateRequest;
 import org.skala.crewvoice.dto.response.QuestionEditResponse;
-import org.skala.crewvoice.dto.response.QuestionResponse;
+import org.skala.crewvoice.dto.response.QuestionStep2ListResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2DetailResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2RandomResponse;
 import org.skala.crewvoice.exception.ErrorCode;
@@ -13,6 +13,7 @@ import org.skala.crewvoice.repository.QuestionStep2Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -25,8 +26,8 @@ public class QuestionStep2Service extends BaseQuestionService {
         this.questionStep2Repository = questionStep2Repository;
     }
 
-    public List<QuestionResponse> getStep2Questions(int pageNumber) {
-        return getQuestions(pageNumber, questionStep2Repository, QuestionResponse::from);
+    public List<QuestionStep2ListResponse> getStep2Questions(int pageNumber) {
+        return getQuestions(pageNumber, questionStep2Repository, QuestionStep2ListResponse::from);
     }
 
     public QuestionStep2DetailResponse getQuestionById(Long questionId) {

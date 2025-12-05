@@ -7,6 +7,7 @@ import org.skala.crewvoice.domain.FinalGrade;
 import org.skala.crewvoice.domain.User;
 import org.skala.crewvoice.dto.response.CrewInfoResponse;
 import org.skala.crewvoice.dto.response.CrewListResponse;
+import org.skala.crewvoice.dto.response.CrewManagementResponse;
 import org.skala.crewvoice.exception.ErrorCode;
 import org.skala.crewvoice.exception.custom.EntityNotFoundException;
 import org.skala.crewvoice.repository.EvaluationRepository;
@@ -66,5 +67,39 @@ public class CrewService {
                 crewInfoList.stream().filter(CrewInfoResponse::getState).count());
 
         return CrewListResponse.of(crewInfoList);
+    }
+
+    /**
+     * 전체 피평가자(CREW)의 정보와 최신 등급 조회
+     *
+     * <p>관리자가 "피평가자 관리" 페이지에서 모든 CREW의 정보를 조회합니다.
+     * 각 피평가자의 가장 최신 FinalGrade를 조회하여 한국어/영어 등급을 함께 반환합니다.
+     *
+     * @return 전체 피평가자 목록 (최신 등급 포함)
+     */
+    public List<CrewManagementResponse> getAllCrewsWithLatestGrades() {
+        log.info("전체 피평가자 정보 조회 시작");
+
+        // 1. 모든 CREW 사용자 조회 (role='CREW')
+        List<User> allCrews = userRepository.findAllCrews();
+        log.info("전체 CREW 사용자 수: {}", allCrews.size());
+
+        // 2. 각 CREW의 최신 FinalGrade 조회 및 Response DTO 생성
+        List<CrewManagementResponse> responses = allCrews.stream()
+                .map(user -> {
+                    // 해당 사용자의 가장 최신 최종 성적 조회 (없을 수 있음)
+                    FinalGrade latestGrade = finalGradeRepository
+                            .findLatestByUserId(user.getId())
+                            .orElse(null);
+
+                    return CrewManagementResponse.from(user, latestGrade);
+                })
+                .toList();
+
+        log.info("전체 피평가자 정보 조회 완료 - 총 {}명 (등급 보유: {}명)",
+                responses.size(),
+                responses.stream().filter(r -> !"등급없음".equals(r.getKorGrade())).count());
+
+        return responses;
     }
 }

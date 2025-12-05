@@ -30,4 +30,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     @Query("SELECT u FROM User u WHERE u.status = org.skala.crewvoice.domain.UserStatus.ACTIVE AND u.role = 'CREW' ORDER BY u.name ASC")
     List<User> findAllActiveCrewMembers();
+
+    /**
+     * CREW 역할을 가진 모든 사용자를 조회합니다.
+     *
+     * @return CREW 역할 사용자 목록
+     */
+    @Query("SELECT u FROM User u WHERE u.status = org.skala.crewvoice.domain.UserStatus.ACTIVE AND u.role = 'CREW' ORDER BY u.createdAt DESC")
+    List<User> findAllCrews();
 }

@@ -64,7 +64,7 @@ public class QuestionStep3 extends BaseTimeEntity {
 
     // Soft Delete 처리
     public void delete() {
-        this.status = "DELETED";
+        this.status = "INACTIVE";
     }
 
     // 활성화 처리
@@ -82,6 +82,7 @@ public class QuestionStep3 extends BaseTimeEntity {
         this.scriptEnglish = scriptEnglish;
         this.explanation = explanation;
         this.isUsed = "MOCK";
+        this.status = "ACTIVE";
     }
 
     public void update(String situationDescription, String aircraftType, String departure, String arrival, String boardingDate, String scriptKorean, String scriptEnglish, String explanation) {

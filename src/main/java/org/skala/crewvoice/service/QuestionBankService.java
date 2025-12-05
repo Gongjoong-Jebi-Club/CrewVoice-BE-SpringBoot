@@ -8,6 +8,7 @@ import org.skala.crewvoice.domain.QuestionStep2;
 import org.skala.crewvoice.domain.QuestionStep3;
 import org.skala.crewvoice.dto.response.QuestionBankSummaryResponse;
 import org.skala.crewvoice.dto.response.QuestionDeleteResponse;
+import org.skala.crewvoice.dto.response.QuestionListResponse;
 import org.skala.crewvoice.dto.response.QuestionStep2Response;
 import org.skala.crewvoice.dto.response.QuestionStep3Response;
 import org.skala.crewvoice.exception.ErrorCode;
@@ -42,30 +43,30 @@ public class QuestionBankService {
     /**
      * STEP2 또는 STEP3 문제 전체 리스트 조회
      * @param step "step2" 또는 "step3"
-     * @return 문제 리스트 (DTO)
+     * @return 문제 리스트 (DTO) - "questions" 배열로 래핑
      */
-    public List<?> getQuestionsByStep(String step) {
+    public QuestionListResponse getQuestionsByStep(String step) {
         log.info("문제 리스트 조회 시작: step={}", step);
 
         if ("step2".equalsIgnoreCase(step)) {
             List<QuestionStep2Response> responses = questionStep2Repository
-                    .findAllByOrderByCreatedAtAsc()
+                    .findAllByStatusOrderByCreatedAtAsc("ACTIVE")
                     .stream()
                     .map(QuestionStep2Response::from)
                     .collect(Collectors.toList());
 
             log.info("STEP2 문제 조회 완료: 총 {}개", responses.size());
-            return responses;
+            return QuestionListResponse.of(responses);
 
         } else if ("step3".equalsIgnoreCase(step)) {
             List<QuestionStep3Response> responses = questionStep3Repository
-                    .findAllByOrderByCreatedAtAsc()
+                    .findAllByStatusOrderByCreatedAtAsc("ACTIVE")
                     .stream()
                     .map(QuestionStep3Response::from)
                     .collect(Collectors.toList());
 
             log.info("STEP3 문제 조회 완료: 총 {}개", responses.size());
-            return responses;
+            return QuestionListResponse.of(responses);
 
         } else {
             log.error("유효하지 않은 step 값: {}", step);
@@ -163,7 +164,7 @@ public class QuestionBankService {
                 });
 
         // 이미 삭제된 문제인지 확인
-        if ("DELETED".equals(question.getStatus())) {
+        if ("INACTIVE".equals(question.getStatus())) {
             log.warn("이미 삭제된 STEP1 문제 - questionId: {}", questionId);
             throw new InvalidRequestException(ErrorCode.ALREADY_DELETED_QUESTION);
         }
@@ -184,7 +185,7 @@ public class QuestionBankService {
                 });
 
         // 이미 삭제된 문제인지 확인
-        if ("DELETED".equals(question.getStatus())) {
+        if ("INACTIVE".equals(question.getStatus())) {
             log.warn("이미 삭제된 STEP2 문제 - questionId: {}", questionId);
             throw new InvalidRequestException(ErrorCode.ALREADY_DELETED_QUESTION);
         }
@@ -205,7 +206,7 @@ public class QuestionBankService {
                 });
 
         // 이미 삭제된 문제인지 확인
-        if ("DELETED".equals(question.getStatus())) {
+        if ("INACTIVE".equals(question.getStatus())) {
             log.warn("이미 삭제된 STEP3 문제 - questionId: {}", questionId);
             throw new InvalidRequestException(ErrorCode.ALREADY_DELETED_QUESTION);
         }

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.skala.crewvoice.dto.response.ApiResponse;
 import org.skala.crewvoice.dto.response.QuestionDeleteResponse;
+import org.skala.crewvoice.dto.response.QuestionListResponse;
 import org.skala.crewvoice.service.QuestionBankService;
 import org.skala.crewvoice.dto.response.QuestionBankSummaryResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -39,17 +40,17 @@ public class QuestionBankController {
      * @return 문제 리스트
      */
     @Operation(summary = "STEP2/3 문제 리스트 조회",
-            description = "해당 STEP의 모든 문제를 조회합니다. (Pagination 없음)")
+            description = "해당 STEP의 모든 ACTIVE 상태 문제를 조회합니다. (Pagination 없음)")
     @GetMapping("/{step}")
-    public ResponseEntity<ApiResponse<List<?>>> getQuestions(
+    public ResponseEntity<ApiResponse<QuestionListResponse>> getQuestions(
             @Parameter(description = "조회할 STEP (step2 또는 step3)", required = true, example = "step2")
             @PathVariable String step) {
 
         log.info("GET /api/v1/questions/{} - 문제 리스트 조회 요청", step);
 
-        List<?> questions = questionBankService.getQuestionsByStep(step);
+        QuestionListResponse response = questionBankService.getQuestionsByStep(step);
 
-        return ResponseEntity.ok(ApiResponse.success(questions));
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     /**

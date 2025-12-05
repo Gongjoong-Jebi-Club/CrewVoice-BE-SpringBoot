@@ -45,7 +45,7 @@ public class QuestionStep1 extends BaseTimeEntity {
 
      // Soft Delete 처리
     public void delete() {
-        this.status = "DELETED";
+        this.status = "INACTIVE";
     }
 
     // 활성화 처리
@@ -64,5 +64,6 @@ public class QuestionStep1 extends BaseTimeEntity {
         this.correctAnswer = correctAnswer;
         this.explanation = explanation;
         this.isUsed = "MOCK";
+        this.status = "ACTIVE";
     }
 }

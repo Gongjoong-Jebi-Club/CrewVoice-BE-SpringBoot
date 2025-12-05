@@ -17,10 +17,11 @@ import java.util.Optional;
 public interface QuestionStep3Repository extends JpaRepository<QuestionStep3, Long> {
 
     /**
-     * 모든 STEP3 문제 조회 (생성일 기준 정렬)
+     * 특정 상태의 STEP3 문제 조회 (생성일 기준 정렬)
+     * @param status 문제 상태 (ACTIVE, DELETED 등)
      * @return STEP3 문제 리스트
      */
-    List<QuestionStep3> findAllByOrderByCreatedAtAsc();
+    List<QuestionStep3> findAllByStatusOrderByCreatedAtAsc(String status);
 
     // 랜덤 조회
     @Query(value = "SELECT * FROM questions_step3 WHERE (:isEmpty = true OR question_id NOT IN :excludedIds) ORDER BY RANDOM() LIMIT 1", nativeQuery = true)

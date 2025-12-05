@@ -21,31 +21,15 @@ public class QuestionStep2Response {
     private Long questionId;
     private String situationDescription;
     private String aircraftType;
-    private String scriptKorean;
-    private String scriptEnglish;
-    private String explanation;
-    private String isUsed;
-
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ssXXX")
-    private OffsetDateTime createdAt;
-
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ssXXX")
-    private OffsetDateTime updatedAt;
 
     /**
-     * Entity → DTO 변환
+     * Entity → DTO 변환 (리스트 조회용 - 필수 필드만)
      */
     public static QuestionStep2Response from(QuestionStep2 entity) {
         return QuestionStep2Response.builder()
                 .questionId(entity.getQuestionId())
                 .situationDescription(entity.getSituationDescription())
                 .aircraftType(entity.getAircraftType())
-                .scriptKorean(entity.getScriptKorean())
-                .scriptEnglish(entity.getScriptEnglish())
-                .explanation(entity.getExplanation())
-                .isUsed(entity.getIsUsed())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
                 .build();
     }
 }

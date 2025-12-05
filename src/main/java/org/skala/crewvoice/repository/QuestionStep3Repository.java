@@ -36,5 +36,11 @@ public interface QuestionStep3Repository extends JpaRepository<QuestionStep3, Lo
     @Query("SELECT MAX(q.updatedAt) FROM QuestionStep3 q")
     OffsetDateTime findLatestUpdatedAt();
 
-
+    /**
+     * 특정 상태의 STEP3 문제 개수 조회
+     *
+     * @param status 문제 상태 (ACTIVE, INACTIVE)
+     * @return 해당 상태의 문제 개수
+     */
+    long countByStatus(String status);
 }

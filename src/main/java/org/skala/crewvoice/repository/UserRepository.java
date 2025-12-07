@@ -30,4 +30,29 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     @Query("SELECT u FROM User u WHERE u.status = org.skala.crewvoice.domain.UserStatus.ACTIVE AND u.role = 'CREW' ORDER BY u.name ASC")
     List<User> findAllActiveCrewMembers();
+
+    /**
+     * CREW 역할을 가진 모든 사용자를 조회합니다.
+     *
+     * @return CREW 역할 사용자 목록
+     */
+    @Query("SELECT u FROM User u WHERE u.status = org.skala.crewvoice.domain.UserStatus.ACTIVE AND u.role = 'CREW' ORDER BY u.createdAt DESC")
+    List<User> findAllCrews();
+
+    /**
+     * CREW 역할을 가진 ACTIVE 사용자를 키워드로 검색합니다.
+     * 이름 또는 사번에 키워드가 포함된 사용자를 조회합니다.
+     * 대소문자 구분 없이 검색합니다 (사번에 영어+숫자 혼합 가능).
+     *
+     * @param keyword 검색 키워드 (이름 또는 사번, 이메일 제외)
+     * @return 검색된 CREW 사용자 목록 (생성일 내림차순)
+     */
+    @Query("SELECT u FROM User u " +
+           "WHERE u.status = org.skala.crewvoice.domain.UserStatus.ACTIVE " +
+           "AND u.role = 'CREW' " +
+           "AND (:keyword IS NULL OR :keyword = '' " +
+           "     OR LOWER(u.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "     OR LOWER(u.employeeId) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "ORDER BY u.createdAt DESC")
+    List<User> searchCrewsByKeyword(@Param("keyword") String keyword);
 }

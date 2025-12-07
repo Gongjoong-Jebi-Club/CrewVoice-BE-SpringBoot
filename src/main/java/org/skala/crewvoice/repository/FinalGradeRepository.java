@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface FinalGradeRepository extends JpaRepository<FinalGrade, Long> {
 
@@ -33,4 +34,19 @@ public interface FinalGradeRepository extends JpaRepository<FinalGrade, Long> {
      */
     @Query("SELECT COUNT(fg) FROM FinalGrade fg WHERE fg.evaluation.evaluationId = :evaluationId")
     Integer countByEvaluationId(@Param("evaluationId") Long evaluationId);
+
+    /**
+     * 특정 사용자의 가장 최신 EXAM 타입 최종 성적을 조회합니다.
+     *
+     * @param userId 사용자 ID
+     * @return 가장 최신 EXAM 타입 최종 성적 (Optional)
+     */
+    @Query("SELECT fg FROM FinalGrade fg " +
+            "JOIN FETCH fg.evaluation e " +
+            "WHERE fg.user.id = :userId " +
+            "AND e.evaluationType = 'EXAM' " +
+            "ORDER BY fg.createdAt DESC " +
+            "LIMIT 1")
+    Optional<FinalGrade> findLatestByUserId(@Param("userId") Long userId);
+
 }

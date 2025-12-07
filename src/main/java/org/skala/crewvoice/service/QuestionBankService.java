@@ -43,34 +43,34 @@ public class QuestionBankService {
      * STEP별 문제 개수와 최종 수정 일자 조회
      *
      * 관리자가 문제은행 페이지에 접속 시 호출되는 API
-     * STEP1, STEP2, STEP3 각각의 총 문제 수와 최종 수정 일시를 반환
+     * STEP1, STEP2, STEP3 각각의 ACTIVE 상태 문제 수와 최종 수정 일시를 반환
      *
-     * @return STEP별 문제 통계 정보
+     * @return STEP별 문제 통계 정보 (ACTIVE 상태만)
      */
     public QuestionBankSummaryResponse getQuestionBankSummary() {
-        log.info("문제은행 기본 정보 조회 시작");
+        log.info("문제은행 기본 정보 조회 시작 (ACTIVE 상태만)");
 
         List<StepSummary> summaries = new ArrayList<>();
 
-        // STEP1 통계
-        long step1Count = questionStep1Repository.count();
+        // STEP1 통계 (ACTIVE만)
+        long step1Count = questionStep1Repository.countByStatus("ACTIVE");
         OffsetDateTime step1UpdatedAt = questionStep1Repository.findLatestUpdatedAt();
         summaries.add(StepSummary.of("step1", (int) step1Count, step1UpdatedAt));
-        log.debug("STEP1 통계 - 문제 수: {}, 최종 수정: {}", step1Count, step1UpdatedAt);
+        log.debug("STEP1 통계 - ACTIVE 문제 수: {}, 최종 수정: {}", step1Count, step1UpdatedAt);
 
-        // STEP2 통계
-        long step2Count = questionStep2Repository.count();
+        // STEP2 통계 (ACTIVE만)
+        long step2Count = questionStep2Repository.countByStatus("ACTIVE");
         OffsetDateTime step2UpdatedAt = questionStep2Repository.findLatestUpdatedAt();
         summaries.add(StepSummary.of("step2", (int) step2Count, step2UpdatedAt));
-        log.debug("STEP2 통계 - 문제 수: {}, 최종 수정: {}", step2Count, step2UpdatedAt);
+        log.debug("STEP2 통계 - ACTIVE 문제 수: {}, 최종 수정: {}", step2Count, step2UpdatedAt);
 
-        // STEP3 통계
-        long step3Count = questionStep3Repository.count();
+        // STEP3 통계 (ACTIVE만)
+        long step3Count = questionStep3Repository.countByStatus("ACTIVE");
         OffsetDateTime step3UpdatedAt = questionStep3Repository.findLatestUpdatedAt();
         summaries.add(StepSummary.of("step3", (int) step3Count, step3UpdatedAt));
-        log.debug("STEP3 통계 - 문제 수: {}, 최종 수정: {}", step3Count, step3UpdatedAt);
+        log.debug("STEP3 통계 - ACTIVE 문제 수: {}, 최종 수정: {}", step3Count, step3UpdatedAt);
 
-        log.info("문제은행 기본 정보 조회 완료 - 총 {}개 STEP", summaries.size());
+        log.info("문제은행 기본 정보 조회 완료 - 총 {}개 STEP (ACTIVE 상태만)", summaries.size());
 
         return QuestionBankSummaryResponse.builder()
                 .data(summaries)

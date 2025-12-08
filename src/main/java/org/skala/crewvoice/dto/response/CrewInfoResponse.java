@@ -30,8 +30,8 @@ public class CrewInfoResponse {
     @JsonProperty("employeeId")
     private String employeeId;
 
-    @JsonProperty("state")
-    private Boolean state;
+    @JsonProperty("isCompleted")
+    private Boolean isCompleted;
 
     @JsonProperty("completionTime")
     @JsonFormat(pattern = "yyyy.MM.dd HH:mm")
@@ -63,7 +63,7 @@ public class CrewInfoResponse {
                 .id(String.valueOf(user.getId()))
                 .name(user.getName())
                 .employeeId(user.getEmployeeId())
-                .state(finalGrade != null)
+                .isCompleted(finalGrade != null)
                 .completionTime(finalGrade != null ? finalGrade.getCreatedAt() : null)
                 .step1Score(finalGrade != null ? finalGrade.getStep1Score() : null)
                 .step2KorScore(finalGrade != null ? finalGrade.getStep2KorScore() : null)

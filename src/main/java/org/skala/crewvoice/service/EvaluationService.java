@@ -109,16 +109,19 @@ public class EvaluationService {
         // 1. 모든 평가 조회 (최신순) - 날짜 조건 없음
         List<Evaluation> evaluations = evaluationRepository.findAllByOrderByCreatedAtDesc();
 
-        // 2. 평가 생성 시점의 피평가자 수 계산
-        // (현재 시스템에서는 시험 생성 시점의 ACTIVE 상태 CREW 수를 사용)
-        Integer targetCount = userRepository.countActiveCrewMembers();
-
-        // 3. 각 평가별로 완료자 수를 조회하고 Response DTO 생성
+        // 2. 각 평가별로 대상자 수와 완료자 수를 조회하고 Response DTO 생성
         List<EvaluationResponse> responseList = evaluations.stream()
                 .map(evaluation -> {
+                    // 해당 평가의 대상자 수 (evaluation_target_users 테이블에서 조회)
+                    Integer targetCount = evaluationTargetUserRepository
+                            .findByEvaluationEvaluationId(evaluation.getEvaluationId())
+                            .size();
+
+                    // 해당 평가의 완료자 수 (final_grades 테이블에서 조회)
                     Integer completedCount = finalGradeRepository.countByEvaluationId(
                             evaluation.getEvaluationId()
                     );
+
                     return EvaluationResponse.of(evaluation, targetCount, completedCount);
                 })
                 .toList();

@@ -65,13 +65,13 @@ public class CrewController {
      *
      * @param evaluationId 평가 ID
      * @param keyword 검색 키워드 (이름 또는 사번, optional)
-     * @param status 완료 상태 필터 (영어: all/completed/incomplete, 한글: 전체/완료/미완료, optional)
+     * @param completeStatus 완료 상태 필터 (영어: completed/incompleted, 한글: 완료/미완료, optional)
      * @return 평가 대상자 목록
      */
     @Operation(summary = "평가 대상자 정보 조회, 검색 및 필터링",
                description = "특정 평가의 모든 대상자 정보를 조회합니다. " +
                              "키워드로 이름 또는 사번을 검색하고, 완료/미완료 상태로 필터링할 수 있습니다. " +
-                             "상태 필터는 영어(all/completed/incomplete) 또는 한글(전체/완료/미완료) 모두 사용 가능합니다.")
+                             "완료 상태 필터는 영어(completed/incompleted) 또는 한글(완료/미완료) 모두 사용 가능합니다.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패"),
@@ -84,13 +84,13 @@ public class CrewController {
             @PathVariable Long evaluationId,
             @Parameter(description = "검색 키워드 (이름 또는 사번)", required = false)
             @RequestParam(required = false) String keyword,
-            @Parameter(description = "완료 상태 필터 - 영어: all/completed/incomplete 또는 한글: 전체/완료/미완료", required = false)
-            @RequestParam(required = false) String status
+            @Parameter(description = "완료 상태 필터 - 영어: completed/incompleted 또는 한글: 완료/미완료", required = false)
+            @RequestParam(name = "completeStatus", required = false) String completeStatus
     ) {
-        log.info("GET /api/v1/crews/{} - 평가 대상자 정보 조회 요청 (keyword: {}, status: {})",
-                evaluationId, keyword, status);
+        log.info("GET /api/v1/crews/{} - 평가 대상자 정보 조회 요청 (keyword: {}, completeStatus: {})",
+                evaluationId, keyword, completeStatus);
 
-        CrewListResponse response = crewService.getCrewInfoByEvaluation(evaluationId, keyword, status);
+        CrewListResponse response = crewService.getCrewInfoByEvaluation(evaluationId, keyword, completeStatus);
 
         log.info("평가 대상자 정보 조회 성공 - 평가ID: {}, 대상자 수: {}",
                 evaluationId, response.getCrewInfo().size());

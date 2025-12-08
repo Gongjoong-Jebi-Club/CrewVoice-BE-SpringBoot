@@ -3,10 +3,13 @@ package org.skala.crewvoice.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.skala.crewvoice.domain.Evaluation;
+import org.skala.crewvoice.domain.EvaluationTargetUser;
 import org.skala.crewvoice.domain.EvaluationType;
+import org.skala.crewvoice.domain.User;
 import org.skala.crewvoice.dto.request.EvaluationCreateRequest;
 import org.skala.crewvoice.dto.response.*;
 import org.skala.crewvoice.repository.EvaluationRepository;
+import org.skala.crewvoice.repository.EvaluationTargetUserRepository;
 import org.skala.crewvoice.repository.FinalGradeRepository;
 import org.skala.crewvoice.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -14,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.time.OffsetDateTime;
 
 /**
@@ -28,6 +32,7 @@ public class EvaluationService {
     private final EvaluationRepository evaluationRepository;
     private final FinalGradeRepository finalGradeRepository;
     private final UserRepository userRepository;
+    private final EvaluationTargetUserRepository evaluationTargetUserRepository;
 
 
     /**
@@ -67,7 +72,28 @@ public class EvaluationService {
 
         log.info("평가 생성 완료 - 평가ID: {}", savedEvaluation.getEvaluationId());
 
-        // 5. 응답 DTO 반환
+        // 5. 현재 시점의 모든 ACTIVE CREW 사용자 조회 및 평가 대상자 자동 등록
+        List<User> crewUsers = userRepository.findAllActiveCrewMembers();
+        log.info("조회된 CREW 사용자 수: {}", crewUsers.size());
+
+        if (!crewUsers.isEmpty()) {
+            List<EvaluationTargetUser> targetUsers = crewUsers.stream()
+                    .map(user -> {
+                        log.debug("평가 대상자 추가: userId={}, userName={}", user.getId(), user.getName());
+                        return EvaluationTargetUser.builder()
+                                .evaluation(savedEvaluation)
+                                .user(user)
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+
+            List<EvaluationTargetUser> savedTargetUsers = evaluationTargetUserRepository.saveAll(targetUsers);
+            log.info("평가 대상자 자동 등록 완료 - 대상자 수: {}", savedTargetUsers.size());
+        } else {
+            log.warn("등록할 CREW 사용자가 없습니다. 평가 대상자가 등록되지 않았습니다.");
+        }
+
+        // 6. 응답 DTO 반환
         return EvaluationCreateResponse.from(savedEvaluation.getEvaluationId());
     }
 
@@ -83,16 +109,19 @@ public class EvaluationService {
         // 1. 모든 평가 조회 (최신순) - 날짜 조건 없음
         List<Evaluation> evaluations = evaluationRepository.findAllByOrderByCreatedAtDesc();
 
-        // 2. 평가 생성 시점의 피평가자 수 계산
-        // (현재 시스템에서는 시험 생성 시점의 ACTIVE 상태 CREW 수를 사용)
-        Integer targetCount = userRepository.countActiveCrewMembers();
-
-        // 3. 각 평가별로 완료자 수를 조회하고 Response DTO 생성
+        // 2. 각 평가별로 대상자 수와 완료자 수를 조회하고 Response DTO 생성
         List<EvaluationResponse> responseList = evaluations.stream()
                 .map(evaluation -> {
+                    // 해당 평가의 대상자 수 (evaluation_target_users 테이블에서 조회)
+                    Integer targetCount = evaluationTargetUserRepository
+                            .findByEvaluationEvaluationId(evaluation.getEvaluationId())
+                            .size();
+
+                    // 해당 평가의 완료자 수 (final_grades 테이블에서 조회)
                     Integer completedCount = finalGradeRepository.countByEvaluationId(
                             evaluation.getEvaluationId()
                     );
+
                     return EvaluationResponse.of(evaluation, targetCount, completedCount);
                 })
                 .toList();

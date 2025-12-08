@@ -11,6 +11,8 @@ import org.skala.crewvoice.exception.custom.InvalidRequestException;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 평가(시험) 엔티티
@@ -59,6 +61,9 @@ public class Evaluation extends BaseTimeEntity {
 
     @Column(name = "weight_accent", nullable = false, precision = 5, scale = 2)
     private BigDecimal weightAccent;
+
+    @OneToMany(mappedBy = "evaluation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EvaluationTargetUser> targetUsers = new ArrayList<>();
 
     @Builder
     public Evaluation(String evaluationName, EvaluationType evaluationType, OffsetDateTime startDate,

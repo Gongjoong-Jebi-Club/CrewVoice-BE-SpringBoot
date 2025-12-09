@@ -12,12 +12,16 @@ public class QuestionStep2RandomResponse {
     private Long questionId;
     private String situationDescription;
     private String aircraftType;
+    private String korScript;
+    private String engScript;
 
     public static QuestionStep2RandomResponse from(QuestionStep2 question) {
         return new QuestionStep2RandomResponse(
                 question.getQuestionId(),
                 question.getSituationDescription(),
-                question.getAircraftType()
+                question.getAircraftType(),
+                question.getScriptKorean(),
+                question.getScriptEnglish()
         );
     }
 }

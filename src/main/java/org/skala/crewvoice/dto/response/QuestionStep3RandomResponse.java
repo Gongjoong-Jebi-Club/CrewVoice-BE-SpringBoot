@@ -18,6 +18,8 @@ public class QuestionStep3RandomResponse {
     private String departure;
     private String arrival;
     private String boardingDate;
+    private String korScript;
+    private String engScript;
 
     public static QuestionStep3RandomResponse of(List<Long> questionIdList, QuestionStep3 question) {
         return new QuestionStep3RandomResponse(
@@ -26,7 +28,9 @@ public class QuestionStep3RandomResponse {
                 question.getAircraftType(),
                 question.getDeparture(),
                 question.getArrival(),
-                DateFormatter.formatToMMdd(question.getBoardingDate())
+                DateFormatter.formatToMMdd(question.getBoardingDate()),
+                question.getScriptKorean(),
+                question.getScriptEnglish()
         );
     }
 }

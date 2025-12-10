@@ -12,6 +12,7 @@ import java.time.OffsetDateTime;
 
 /**
  * STEP3 제출 내역 Entity
+ * Step2와 동일한 구조 (언어별로 별도 제출)
  */
 @Entity
 @Table(name = "submissions_step3")
@@ -34,23 +35,22 @@ public class SubmissionStep3 {
     @JoinColumn(name = "evaluation_id", nullable = false)
     private Evaluation evaluation;
 
-    @Column(name = "question_id", nullable = false)
-    private Long questionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "question_id", nullable = false)
+    private QuestionStep3 question;
 
     @Column(name = "part_order", nullable = false)
-    private Integer partOrder;  // 1, 2, 3
+    private Integer partOrder;  // 1, 2, 3 (문제 파트 구분)
 
-    @Column(name = "audio_file_korean_url", columnDefinition = "TEXT", nullable = false)
-    private String audioFileKoreanUrl;
+    // LanguageConverter를 통해 DB에 "ko-KR" 또는 "en-US"로 저장됨
+    @Column(name = "language", length = 10, nullable = false)
+    private Language language;
 
-    @Column(name = "audio_file_english_url", columnDefinition = "TEXT", nullable = false)
-    private String audioFileEnglishUrl;
+    @Column(name = "audio_file_url", columnDefinition = "TEXT", nullable = false)
+    private String audioFileUrl;
 
-    @Column(name = "audio_duration_korean", precision = 6, scale = 2)
-    private BigDecimal audioDurationKorean;
-
-    @Column(name = "audio_duration_english", precision = 6, scale = 2)
-    private BigDecimal audioDurationEnglish;
+    @Column(name = "audio_duration", precision = 6, scale = 2)
+    private BigDecimal audioDuration;
 
     @Column(name = "submitted_at")
     private OffsetDateTime submittedAt;

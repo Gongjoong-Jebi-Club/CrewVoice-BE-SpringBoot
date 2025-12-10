@@ -139,20 +139,15 @@ public class RecordingService {
      * STEP2 Object Key 추출
      */
     private String getStep2ObjectKey(RecordingDownloadRequest request) {
-        List<SubmissionStep2> submissions = submissionStep2Repository
-                .findByUserIdAndEvaluationId(request.getUserId(), request.getEvaluationId());
+        SubmissionStep2 submission = submissionStep2Repository
+                .findByUserIdAndEvaluationIdAndLanguage(
+                        request.getUserId(),
+                        request.getEvaluationId(),
+                        request.getLanguage()
+                )
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SUBMISSION_NOT_FOUND));
 
-        if (submissions.isEmpty()) {
-            throw new EntityNotFoundException(ErrorCode.SUBMISSION_NOT_FOUND);
-        }
-
-        SubmissionStep2 submission = submissions.get(0);
-
-        // Language Enum의 selectUrl 메서드 활용
-        String objectKey = request.getLanguage().selectUrl(
-                submission.getAudioFileKoreanUrl(),
-                submission.getAudioFileEnglishUrl()
-        );
+        String objectKey = submission.getAudioFileUrl();
 
         if (objectKey == null || objectKey.trim().isEmpty()) {
             log.error("음성 파일이 업로드되지 않음 - userId: {}, evaluationId: {}, language: {}",
@@ -165,6 +160,7 @@ public class RecordingService {
 
     /**
      * STEP3 Object Key 추출
+     * Step2와 동일하게 처리 (언어별로 별도 제출)
      */
     private String getStep3ObjectKey(RecordingDownloadRequest request) {
         SubmissionStep3 submission = submissionStep3Repository
@@ -175,11 +171,8 @@ public class RecordingService {
                 )
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SUBMISSION_NOT_FOUND));
 
-        // Language Enum의 selectUrl 메서드 활용
-        String objectKey = request.getLanguage().selectUrl(
-                submission.getAudioFileKoreanUrl(),
-                submission.getAudioFileEnglishUrl()
-        );
+        // Step2와 동일하게 audioFileUrl 하나만 사용
+        String objectKey = submission.getAudioFileUrl();
 
         if (objectKey == null || objectKey.trim().isEmpty()) {
             log.error("음성 파일이 업로드되지 않음 - userId: {}, evaluationId: {}, question: {}, language: {}",

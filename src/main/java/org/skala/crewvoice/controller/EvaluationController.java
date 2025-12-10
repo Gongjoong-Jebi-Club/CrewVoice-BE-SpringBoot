@@ -8,11 +8,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.skala.crewvoice.dto.request.CallbackRequest;
 import org.skala.crewvoice.dto.request.EvaluationCreateRequest;
-import org.skala.crewvoice.dto.response.ActiveEvaluationListResponse;
-import org.skala.crewvoice.dto.response.ApiResponse;
-import org.skala.crewvoice.dto.response.EvaluationCreateResponse;
-import org.skala.crewvoice.dto.response.EvaluationListResponse;
+import org.skala.crewvoice.dto.request.EvaluationStartRequest;
+import org.skala.crewvoice.dto.response.*;
 import org.skala.crewvoice.repository.UserRepository;
 import org.skala.crewvoice.service.EvaluationService;
 import org.springframework.http.ResponseEntity;
@@ -138,5 +137,98 @@ public class EvaluationController {
         log.info("현재 진행 중인 평가 조회 성공 - 평가 수: {}", response.getEvaluations().size());
 
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    /**
+     * 평가 시작 (3번 API)
+     * 제출된 음성 파일에 대한 평가를 FastAPI로 요청합니다.
+     */
+    @Operation(
+            summary = "평가 시작 (3번 API)",
+            description = "사용자가 제출한 음성 파일에 대한 평가를 시작합니다. " +
+                    "FastAPI로 비동기 평가 요청을 전송하고 즉시 반환합니다 (Fire-and-Forget). " +
+                    "평가는 백그라운드에서 진행되며, 완료되면 FastAPI가 5번 API(callback)를 호출합니다."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "평가 시작 성공 (백그라운드 처리 중)",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (제출 ID 없음)",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "제출 내역을 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 (유효하지 않은 토큰)",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            )
+    })
+    @PostMapping("/start")
+    public ResponseEntity<ApiResponse<EvaluationStartResponse>> startEvaluation(
+            @Valid @RequestBody EvaluationStartRequest request
+    ) {
+        log.info("POST /api/v1/evaluations/start - 평가 시작 요청 - submissionId: {}, step: {}",
+                request.getSubmissionId(), request.getStep());
+
+        // 비동기로 평가 시작 (즉시 반환)
+        evaluationService.startEvaluationAsync(request.getSubmissionId(), request.getStep());
+
+        // 응답 생성
+        EvaluationStartResponse response = EvaluationStartResponse.success(request.getSubmissionId());
+
+        log.info("평가 시작 요청 처리 완료 - submissionId: {}, step: {} (백그라운드 처리 중)",
+                request.getSubmissionId(), request.getStep());
+
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    /**
+     * FastAPI 평가 완료 콜백 (5번 API)
+     * FastAPI에서 평가가 완료되면 호출되는 콜백 API
+     */
+    @Operation(
+            summary = "FastAPI 평가 완료 콜백 (5번 API)",
+            description = "FastAPI에서 음성 평가가 완료되면 호출하는 콜백 API입니다. " +
+                    "평가 결과(점수, 피드백)를 받아 데이터베이스에 저장합니다."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "콜백 처리 성공",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (필수 데이터 누락)",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "평가 결과를 찾을 수 없음 (유효하지 않은 task_id)",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            )
+    })
+    @PostMapping("/callback")
+    public ResponseEntity<ApiResponse<Void>> handleCallback(
+            @Valid @RequestBody CallbackRequest request
+    ) {
+        log.info("POST /api/v1/evaluations/callback - FastAPI 콜백 수신 - taskId: {}, status: {}",
+                request.getTaskId(), request.getStatus());
+
+        // 콜백 처리
+        evaluationService.handleCallback(request);
+
+        log.info("FastAPI 콜백 처리 완료 - taskId: {}, status: {}",
+                request.getTaskId(), request.getStatus());
+
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

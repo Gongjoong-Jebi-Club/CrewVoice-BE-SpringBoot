@@ -1,5 +1,6 @@
 package org.skala.crewvoice.repository;
 
+import org.skala.crewvoice.domain.Language;
 import org.skala.crewvoice.domain.SubmissionStep3;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -41,5 +42,35 @@ public interface SubmissionStep3Repository extends JpaRepository<SubmissionStep3
             @Param("userId") Long userId,
             @Param("evaluationId") Long evaluationId,
             @Param("partOrder") Integer partOrder
+    );
+
+    /**
+     * Submission ID로 Step3 제출 기록 조회 (JOIN FETCH로 N+1 문제 방지)
+     * Step2와 동일한 패턴
+     *
+     * @param submissionId 제출 ID
+     * @return Step3 제출 기록 (Optional)
+     */
+    @Query("SELECT s FROM SubmissionStep3 s " +
+            "JOIN FETCH s.question q " +
+            "WHERE s.submissionId = :submissionId")
+    Optional<SubmissionStep3> findByIdWithQuestion(@Param("submissionId") Long submissionId);
+
+    /**
+     * 특정 사용자와 평가 ID, 언어로 Step3 제출 기록 조회
+     *
+     * @param userId 사용자 ID
+     * @param evaluationId 평가 ID
+     * @param language 언어 (KOREAN/ENGLISH)
+     * @return Step3 제출 기록 (Optional)
+     */
+    @Query("SELECT s FROM SubmissionStep3 s " +
+            "WHERE s.user.id = :userId " +
+            "AND s.evaluation.evaluationId = :evaluationId " +
+            "AND s.language = :language")
+    Optional<SubmissionStep3> findByUserIdAndEvaluationIdAndLanguage(
+            @Param("userId") Long userId,
+            @Param("evaluationId") Long evaluationId,
+            @Param("language") Language language
     );
 }

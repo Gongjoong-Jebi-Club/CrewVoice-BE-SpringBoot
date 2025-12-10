@@ -57,4 +57,9 @@ public class SubmissionStep3 {
 
     @Column(name = "evaluated_at")
     private OffsetDateTime evaluatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.submittedAt = OffsetDateTime.now();
+    }
 }

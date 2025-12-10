@@ -6,15 +6,22 @@ import org.skala.crewvoice.exception.ErrorCode;
 import org.skala.crewvoice.exception.custom.InvalidRequestException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
+import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 /**
  * AWS S3 관련 서비스 (AWS SDK v2)
@@ -89,6 +96,97 @@ public class S3Service {
         } catch (Exception e) {
             log.error("S3 Object 존재 확인 실패 - Key: {}, Error: {}", objectKey, e.getMessage(), e);
             return false;
+        }
+    }
+
+    /**
+     * S3에 파일 업로드 (STEP2용)
+     *
+     * @param file 업로드할 파일
+     * @param evaluationId 평가 ID
+     * @param userId 사용자 ID
+     * @param questionId 문제 ID
+     * @param language 언어 코드 ("ko-KR" 또는 "en-US")
+     * @return S3 Object Key
+     */
+    public String uploadFileForStep2(MultipartFile file, Long evaluationId, Long userId, Long questionId, String language) {
+        try {
+            // 언어 코드를 파일명용으로 변환 (ko-KR -> korean, en-US -> english)
+            String languageName = language.startsWith("ko") ? "korean" : "english";
+
+            // Object Key 생성: audios/step2/eval_{평가ID}_{유저ID}_{문제ID}_{언어}.wav
+            String objectKey = String.format("audios/step2/eval_%d_%d_%d_%s.wav",
+                    evaluationId, userId, questionId, languageName);
+
+            log.info("S3 파일 업로드 시작 - Bucket: {}, Key: {}, Size: {} bytes",
+                    bucketName, objectKey, file.getSize());
+
+            // S3에 업로드
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(objectKey)
+                    .contentType(file.getContentType())
+                    .contentLength(file.getSize())
+                    .build();
+
+            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
+
+            log.info("S3 파일 업로드 완료 - Object Key: {}", objectKey);
+            return objectKey;
+
+        } catch (IOException e) {
+            log.error("파일 읽기 실패 - Error: {}", e.getMessage(), e);
+            throw new InvalidRequestException(ErrorCode.FILE_UPLOAD_FAILED);
+        } catch (Exception e) {
+            log.error("S3 파일 업로드 실패 - Error: {}", e.getMessage(), e);
+            throw new InvalidRequestException(ErrorCode.FILE_UPLOAD_FAILED);
+        }
+    }
+
+    /**
+     * S3에 파일 업로드 (STEP3용)
+     *
+     * @param file 업로드할 파일
+     * @param evaluationId 평가 ID
+     * @param userId 사용자 ID
+     * @param questionId 문제 ID
+     * @param partOrder 파트 순서
+     * @param language 언어 코드 ("ko-KR", "en-US", "zh-CN")
+     * @return S3 Object Key
+     */
+    public String uploadFileForStep3(MultipartFile file, Long evaluationId, Long userId,
+                                     Long questionId, Integer partOrder, String language) {
+        try {
+            // 언어 코드를 파일명용으로 변환
+            String languageName = language.startsWith("ko") ? "korean" :
+                                 language.startsWith("en") ? "english" : "chinese";
+
+            // Object Key 생성: audios/step3/eval_{평가ID}_{유저ID}_{문제ID}_{파트순서}_{언어}.wav
+            String objectKey = String.format("audios/step3/eval_%d_%d_%d_%d_%s.wav",
+                    evaluationId, userId, questionId, partOrder, languageName);
+
+            log.info("S3 파일 업로드 시작 - Bucket: {}, Key: {}, Size: {} bytes",
+                    bucketName, objectKey, file.getSize());
+
+            // S3에 업로드
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(objectKey)
+                    .contentType(file.getContentType())
+                    .contentLength(file.getSize())
+                    .build();
+
+            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
+
+            log.info("S3 파일 업로드 완료 - Object Key: {}", objectKey);
+            return objectKey;
+
+        } catch (IOException e) {
+            log.error("파일 읽기 실패 - Error: {}", e.getMessage(), e);
+            throw new InvalidRequestException(ErrorCode.FILE_UPLOAD_FAILED);
+        } catch (Exception e) {
+            log.error("S3 파일 업로드 실패 - Error: {}", e.getMessage(), e);
+            throw new InvalidRequestException(ErrorCode.FILE_UPLOAD_FAILED);
         }
     }
 

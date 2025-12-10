@@ -150,8 +150,7 @@ public class RecordingService {
         String objectKey = submission.getAudioFileUrl();
 
         if (objectKey == null || objectKey.trim().isEmpty()) {
-            log.error("음성 파일이 업로드되지 않음 - userId: {}, evaluationId: {}, language: {}",
-                    request.getUserId(), request.getEvaluationId(), request.getLanguage());
+            log.error("음성 파일 Object Key가 비어있음 - submissionId: {}", submission.getSubmissionId());
             throw new InvalidRequestException(ErrorCode.RECORDING_FILE_NOT_UPLOADED);
         }
 
@@ -164,10 +163,11 @@ public class RecordingService {
      */
     private String getStep3ObjectKey(RecordingDownloadRequest request) {
         SubmissionStep3 submission = submissionStep3Repository
-                .findByUserIdAndEvaluationIdAndPartOrder(
+                .findByUserIdAndEvaluationIdAndPartOrderAndLanguage(
                         request.getUserId(),
                         request.getEvaluationId(),
-                        request.getQuestion()
+                        request.getQuestion(),
+                        request.getLanguage()
                 )
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SUBMISSION_NOT_FOUND));
 
@@ -175,7 +175,7 @@ public class RecordingService {
         String objectKey = submission.getAudioFileUrl();
 
         if (objectKey == null || objectKey.trim().isEmpty()) {
-            log.error("음성 파일이 업로드되지 않음 - userId: {}, evaluationId: {}, question: {}, language: {}",
+            log.error("음성 파일 Object Key가 비어있음 - userId: {}, evaluationId: {}, question: {}, language: {}",
                     request.getUserId(), request.getEvaluationId(), request.getQuestion(), request.getLanguage());
             throw new InvalidRequestException(ErrorCode.RECORDING_FILE_NOT_UPLOADED);
         }

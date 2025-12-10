@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 /**
@@ -48,9 +47,6 @@ public class SubmissionStep3 {
 
     @Column(name = "audio_file_url", columnDefinition = "TEXT", nullable = false)
     private String audioFileUrl;
-
-    @Column(name = "audio_duration", precision = 6, scale = 2)
-    private BigDecimal audioDuration;
 
     @Column(name = "submitted_at")
     private OffsetDateTime submittedAt;

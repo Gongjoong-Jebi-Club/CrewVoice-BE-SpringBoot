@@ -149,19 +149,21 @@ public class S3Service {
      * @param file 업로드할 파일
      * @param evaluationId 평가 ID
      * @param userId 사용자 ID
-     * @param questionNumber 질문 번호 (1, 2, 3)
-     * @param language 언어 코드 ("ko-KR" 또는 "en-US")
+     * @param questionId 문제 ID
+     * @param partOrder 파트 순서
+     * @param language 언어 코드 ("ko-KR", "en-US", "zh-CN")
      * @return S3 Object Key
      */
     public String uploadFileForStep3(MultipartFile file, Long evaluationId, Long userId,
-                                     Integer questionNumber, String language) {
+                                     Long questionId, Integer partOrder, String language) {
         try {
             // 언어 코드를 파일명용으로 변환
-            String languageName = language.startsWith("ko") ? "korean" : "english";
+            String languageName = language.startsWith("ko") ? "korean" :
+                                 language.startsWith("en") ? "english" : "chinese";
 
-            // Object Key 생성: evaluations/{평가ID}/step3/user{유저ID}_q{질문번호}_{언어}.wav
-            String objectKey = String.format("evaluations/%d/step3/user%d_q%d_%s.wav",
-                    evaluationId, userId, questionNumber, languageName);
+            // Object Key 생성: audios/step3/eval_{평가ID}_{유저ID}_{문제ID}_{파트순서}_{언어}.wav
+            String objectKey = String.format("audios/step3/eval_%d_%d_%d_%d_%s.wav",
+                    evaluationId, userId, questionId, partOrder, languageName);
 
             log.info("S3 파일 업로드 시작 - Bucket: {}, Key: {}, Size: {} bytes",
                     bucketName, objectKey, file.getSize());

@@ -42,4 +42,32 @@ public interface SubmissionStep3Repository extends JpaRepository<SubmissionStep3
             @Param("evaluationId") Long evaluationId,
             @Param("partOrder") Integer partOrder
     );
+
+    /**
+     * 특정 사용자의 특정 평가, 특정 questionId에 대한 STEP3 제출 내역 조회
+     */
+    @Query("SELECT s FROM SubmissionStep3 s " +
+            "WHERE s.user.id = :userId " +
+            "AND s.evaluation.evaluationId = :evaluationId " +
+            "AND s.questionId = :questionId")
+    Optional<SubmissionStep3> findByUserIdAndEvaluationIdAndQuestionId(
+            @Param("userId") Long userId,
+            @Param("evaluationId") Long evaluationId,
+            @Param("questionId") Long questionId
+    );
+
+    /**
+     * 특정 사용자의 특정 평가, 특정 partOrder와 언어에 대한 STEP3 제출 내역 조회
+     */
+    @Query("SELECT s FROM SubmissionStep3 s " +
+            "WHERE s.user.id = :userId " +
+            "AND s.evaluation.evaluationId = :evaluationId " +
+            "AND s.partOrder = :partOrder " +
+            "AND s.language = :language")
+    Optional<SubmissionStep3> findByUserIdAndEvaluationIdAndPartOrderAndLanguage(
+            @Param("userId") Long userId,
+            @Param("evaluationId") Long evaluationId,
+            @Param("partOrder") Integer partOrder,
+            @Param("language") String language
+    );
 }

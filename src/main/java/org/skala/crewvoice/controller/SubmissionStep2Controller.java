@@ -7,18 +7,25 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.skala.crewvoice.domain.User;
 import org.skala.crewvoice.dto.request.SubmissionStep2Request;
 import org.skala.crewvoice.dto.response.ApiResponse;
 import org.skala.crewvoice.dto.response.SubmissionStep2Response;
+import org.skala.crewvoice.exception.ErrorCode;
+import org.skala.crewvoice.exception.custom.InvalidRequestException;
 import org.skala.crewvoice.service.SubmissionStep2Service;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * STEP2 제출 API Controller
@@ -32,6 +39,7 @@ public class SubmissionStep2Controller {
 
     private final SubmissionStep2Service submissionStep2Service;
     private final ObjectMapper objectMapper;
+    private final Validator validator;
 
     /**
      * STEP2 음성 파일 제출
@@ -66,6 +74,16 @@ public class SubmissionStep2Controller {
 
             // JSON metadata를 DTO로 변환
             SubmissionStep2Request request = objectMapper.readValue(metadata, SubmissionStep2Request.class);
+
+            // 수동 Validation
+            Set<ConstraintViolation<SubmissionStep2Request>> violations = validator.validate(request);
+            if (!violations.isEmpty()) {
+                String errorMessage = violations.stream()
+                        .map(ConstraintViolation::getMessage)
+                        .collect(Collectors.joining(", "));
+                log.error("Validation 실패 - {}", errorMessage);
+                throw new InvalidRequestException(ErrorCode.INVALID_INPUT_VALUE);
+            }
 
             // 서비스 호출
             SubmissionStep2Response response = submissionStep2Service.submitAudio(user, audioFile, request);

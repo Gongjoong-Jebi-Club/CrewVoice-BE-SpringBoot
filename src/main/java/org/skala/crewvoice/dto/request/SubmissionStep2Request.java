@@ -2,6 +2,7 @@ package org.skala.crewvoice.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,5 +22,6 @@ public class SubmissionStep2Request {
     private Long questionId;
 
     @NotBlank(message = "언어는 필수입니다.")
+    @Pattern(regexp = "^(ko-KR|en-US)$", message = "언어는 ko-KR 또는 en-US여야 합니다.")
     private String language; // "ko-KR" or "en-US"
 }

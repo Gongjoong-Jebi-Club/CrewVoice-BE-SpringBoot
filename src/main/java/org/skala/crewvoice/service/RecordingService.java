@@ -172,18 +172,16 @@ public class RecordingService {
      */
     private String getStep3ObjectKey(RecordingDownloadRequest request) {
         SubmissionStep3 submission = submissionStep3Repository
-                .findByUserIdAndEvaluationIdAndPartOrder(
+                .findByUserIdAndEvaluationIdAndPartOrderAndLanguage(
                         request.getUserId(),
                         request.getEvaluationId(),
-                        request.getQuestion()
+                        request.getQuestion(),
+                        request.getLanguage().getCode()
                 )
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SUBMISSION_NOT_FOUND));
 
-        // Language Enum의 selectUrl 메서드 활용하여 Object Key 가져오기
-        String objectKey = request.getLanguage().selectUrl(
-                submission.getAudioFileKoreanUrl(),
-                submission.getAudioFileEnglishUrl()
-        );
+        // Object Key 가져오기
+        String objectKey = submission.getAudioFileUrl();
 
         if (objectKey == null || objectKey.trim().isEmpty()) {
             log.error("음성 파일 Object Key가 비어있음 - userId: {}, evaluationId: {}, question: {}, language: {}",

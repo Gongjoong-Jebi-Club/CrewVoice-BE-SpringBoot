@@ -40,21 +40,20 @@ public class SubmissionStep3 {
     @Column(name = "part_order", nullable = false)
     private Integer partOrder;  // 1, 2, 3
 
-    @Column(name = "audio_file_korean_url", columnDefinition = "TEXT", nullable = false)
-    private String audioFileKoreanUrl;
+    @Column(name = "language", length = 10, nullable = false)
+    private String language;  // "ko-KR", "en-US", "zh-CN"
 
-    @Column(name = "audio_file_english_url", columnDefinition = "TEXT", nullable = false)
-    private String audioFileEnglishUrl;
+    @Column(name = "audio_file_url", columnDefinition = "TEXT", nullable = false)
+    private String audioFileUrl;
 
-    @Column(name = "audio_duration_korean", precision = 6, scale = 2)
-    private BigDecimal audioDurationKorean;
-
-    @Column(name = "audio_duration_english", precision = 6, scale = 2)
-    private BigDecimal audioDurationEnglish;
-
-    @Column(name = "submitted_at")
+    @Column(name = "submitted_at", nullable = false)
     private OffsetDateTime submittedAt;
 
     @Column(name = "evaluated_at")
     private OffsetDateTime evaluatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.submittedAt = OffsetDateTime.now();
+    }
 }

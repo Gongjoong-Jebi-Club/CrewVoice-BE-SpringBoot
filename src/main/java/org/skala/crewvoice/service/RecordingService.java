@@ -146,17 +146,21 @@ public class RecordingService {
             throw new EntityNotFoundException(ErrorCode.SUBMISSION_NOT_FOUND);
         }
 
-        SubmissionStep2 submission = submissions.get(0);
+        // 요청된 언어에 맞는 제출 찾기
+        String requestedLanguageCode = request.getLanguage().getCode(); // "ko-KR" or "en-US"
+        SubmissionStep2 submission = submissions.stream()
+                .filter(s -> s.getLanguage().equals(requestedLanguageCode))
+                .findFirst()
+                .orElseThrow(() -> {
+                    log.error("해당 언어의 음성 파일이 업로드되지 않음 - userId: {}, evaluationId: {}, language: {}",
+                            request.getUserId(), request.getEvaluationId(), request.getLanguage());
+                    return new InvalidRequestException(ErrorCode.RECORDING_FILE_NOT_UPLOADED);
+                });
 
-        // Language Enum의 selectUrl 메서드 활용
-        String objectKey = request.getLanguage().selectUrl(
-                submission.getAudioFileKoreanUrl(),
-                submission.getAudioFileEnglishUrl()
-        );
+        String objectKey = submission.getAudioFileUrl();
 
         if (objectKey == null || objectKey.trim().isEmpty()) {
-            log.error("음성 파일이 업로드되지 않음 - userId: {}, evaluationId: {}, language: {}",
-                    request.getUserId(), request.getEvaluationId(), request.getLanguage());
+            log.error("음성 파일 Object Key가 비어있음 - submissionId: {}", submission.getSubmissionId());
             throw new InvalidRequestException(ErrorCode.RECORDING_FILE_NOT_UPLOADED);
         }
 
@@ -175,14 +179,14 @@ public class RecordingService {
                 )
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SUBMISSION_NOT_FOUND));
 
-        // Language Enum의 selectUrl 메서드 활용
+        // Language Enum의 selectUrl 메서드 활용하여 Object Key 가져오기
         String objectKey = request.getLanguage().selectUrl(
                 submission.getAudioFileKoreanUrl(),
                 submission.getAudioFileEnglishUrl()
         );
 
         if (objectKey == null || objectKey.trim().isEmpty()) {
-            log.error("음성 파일이 업로드되지 않음 - userId: {}, evaluationId: {}, question: {}, language: {}",
+            log.error("음성 파일 Object Key가 비어있음 - userId: {}, evaluationId: {}, question: {}, language: {}",
                     request.getUserId(), request.getEvaluationId(), request.getQuestion(), request.getLanguage());
             throw new InvalidRequestException(ErrorCode.RECORDING_FILE_NOT_UPLOADED);
         }

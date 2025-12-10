@@ -2,14 +2,13 @@ package org.skala.crewvoice.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.skala.crewvoice.domain.Evaluation;
-import org.skala.crewvoice.domain.SubmissionStep3;
-import org.skala.crewvoice.domain.User;
+import org.skala.crewvoice.domain.*;
 import org.skala.crewvoice.dto.request.SubmissionStep3Request;
 import org.skala.crewvoice.dto.response.SubmissionStep3Response;
 import org.skala.crewvoice.exception.ErrorCode;
 import org.skala.crewvoice.exception.custom.EntityNotFoundException;
 import org.skala.crewvoice.repository.EvaluationRepository;
+import org.skala.crewvoice.repository.QuestionStep3Repository;
 import org.skala.crewvoice.repository.SubmissionStep3Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +25,7 @@ public class SubmissionStep3Service {
 
     private final SubmissionStep3Repository submissionStep3Repository;
     private final EvaluationRepository evaluationRepository;
+    private final QuestionStep3Repository questionStep3Repository;
     private final S3Service s3Service;
 
     /**
@@ -46,18 +46,25 @@ public class SubmissionStep3Service {
         Evaluation evaluation = evaluationRepository.findById(request.getEvaluationId())
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND));
 
-        // 2. S3에 음성 파일 업로드 (Object Key 저장)
+        // 2. Question 존재 확인
+        QuestionStep3 question = questionStep3Repository.findById(request.getQuestionId())
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND));
+
+        // 3. String 언어 코드를 Language Enum으로 변환
+        Language language = Language.fromCode(request.getLanguage());
+
+        // 4. S3에 음성 파일 업로드 (Object Key 저장)
         String objectKey = s3Service.uploadFileForStep3(audioFile, request.getEvaluationId(),
                 user.getId(), request.getQuestionId(), request.getPartOrder(), request.getLanguage());
         log.info("S3 업로드 완료 - Object Key: {}", objectKey);
 
-        // 3. SubmissionStep3 엔티티 생성 및 저장
+        // 5. SubmissionStep3 엔티티 생성 및 저장
         SubmissionStep3 submission = SubmissionStep3.builder()
                 .user(user)
                 .evaluation(evaluation)
-                .questionId(request.getQuestionId())
+                .question(question)
                 .partOrder(request.getPartOrder())
-                .language(request.getLanguage())
+                .language(language)
                 .audioFileUrl(objectKey)  // Object Key를 저장
                 .build();
 
@@ -65,7 +72,7 @@ public class SubmissionStep3Service {
 
         log.info("STEP3 제출 완료 - submissionId: {}", savedSubmission.getSubmissionId());
 
-        // 4. Response 생성
+        // 6. Response 생성
         return SubmissionStep3Response.of(
                 savedSubmission.getSubmissionId(),
                 savedSubmission.getAudioFileUrl(),

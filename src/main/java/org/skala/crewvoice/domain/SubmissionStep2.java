@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 /**
@@ -36,13 +37,17 @@ public class SubmissionStep2 {
     @JoinColumn(name = "question_id", nullable = false)
     private QuestionStep2 question;
 
-    @Column(name = "language", nullable = false, length = 10)
-    private String language;
+    // LanguageConverter를 통해 DB에 "ko-KR" 또는 "en-US"로 저장됨
+    @Column(name = "language", length = 10, nullable = false)
+    private Language language;
 
-    @Column(name = "audio_file_url", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "audio_file_url", columnDefinition = "TEXT", nullable = false)
     private String audioFileUrl;
 
-    @Column(name = "submitted_at", nullable = false, columnDefinition = "TIMESTAMPTZ")
+    @Column(name = "audio_duration", precision = 6, scale = 2)
+    private BigDecimal audioDuration;
+
+    @Column(name = "submitted_at")
     private OffsetDateTime submittedAt;
 
     @Column(name = "evaluated_at", columnDefinition = "TIMESTAMPTZ")
@@ -50,7 +55,7 @@ public class SubmissionStep2 {
 
     @Builder
     public SubmissionStep2(User user, Evaluation evaluation, QuestionStep2 question,
-                          String language, String audioFileUrl) {
+                          Language language, String audioFileUrl) {
         this.user = user;
         this.evaluation = evaluation;
         this.question = question;

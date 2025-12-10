@@ -49,17 +49,20 @@ public class SubmissionStep2Service {
         QuestionStep2 question = questionStep2Repository.findById(request.getQuestionId())
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND));
 
-        // 3. S3에 음성 파일 업로드 (Object Key 저장)
+        // 3. String 언어 코드를 Language Enum으로 변환
+        Language language = Language.fromCode(request.getLanguage());
+
+        // 4. S3에 음성 파일 업로드 (Object Key 저장)
         String objectKey = s3Service.uploadFileForStep2(audioFile, request.getEvaluationId(),
                 user.getId(), request.getQuestionId(), request.getLanguage());
         log.info("S3 업로드 완료 - Object Key: {}", objectKey);
 
-        // 4. SubmissionStep2 엔티티 생성 및 저장
+        // 5. SubmissionStep2 엔티티 생성 및 저장
         SubmissionStep2 submission = SubmissionStep2.builder()
                 .user(user)
                 .evaluation(evaluation)
                 .question(question)
-                .language(request.getLanguage())
+                .language(language)
                 .audioFileUrl(objectKey)  // Object Key를 저장
                 .build();
 
@@ -67,7 +70,7 @@ public class SubmissionStep2Service {
 
         log.info("STEP2 제출 완료 - submissionId: {}", savedSubmission.getSubmissionId());
 
-        // 5. Response 생성
+        // 6. Response 생성
         return SubmissionStep2Response.of(
                 savedSubmission.getSubmissionId(),
                 savedSubmission.getAudioFileUrl(),

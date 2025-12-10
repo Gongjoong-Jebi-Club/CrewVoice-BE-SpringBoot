@@ -139,23 +139,13 @@ public class RecordingService {
      * STEP2 Object Key 추출
      */
     private String getStep2ObjectKey(RecordingDownloadRequest request) {
-        List<SubmissionStep2> submissions = submissionStep2Repository
-                .findByUserIdAndEvaluationId(request.getUserId(), request.getEvaluationId());
-
-        if (submissions.isEmpty()) {
-            throw new EntityNotFoundException(ErrorCode.SUBMISSION_NOT_FOUND);
-        }
-
-        // 요청된 언어에 맞는 제출 찾기
-        String requestedLanguageCode = request.getLanguage().getCode(); // "ko-KR" or "en-US"
-        SubmissionStep2 submission = submissions.stream()
-                .filter(s -> s.getLanguage().equals(requestedLanguageCode))
-                .findFirst()
-                .orElseThrow(() -> {
-                    log.error("해당 언어의 음성 파일이 업로드되지 않음 - userId: {}, evaluationId: {}, language: {}",
-                            request.getUserId(), request.getEvaluationId(), request.getLanguage());
-                    return new InvalidRequestException(ErrorCode.RECORDING_FILE_NOT_UPLOADED);
-                });
+        SubmissionStep2 submission = submissionStep2Repository
+                .findByUserIdAndEvaluationIdAndLanguage(
+                        request.getUserId(),
+                        request.getEvaluationId(),
+                        request.getLanguage()
+                )
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SUBMISSION_NOT_FOUND));
 
         String objectKey = submission.getAudioFileUrl();
 
@@ -169,6 +159,7 @@ public class RecordingService {
 
     /**
      * STEP3 Object Key 추출
+     * Step2와 동일하게 처리 (언어별로 별도 제출)
      */
     private String getStep3ObjectKey(RecordingDownloadRequest request) {
         SubmissionStep3 submission = submissionStep3Repository
@@ -176,11 +167,11 @@ public class RecordingService {
                         request.getUserId(),
                         request.getEvaluationId(),
                         request.getQuestion(),
-                        request.getLanguage().getCode()
+                        request.getLanguage()
                 )
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SUBMISSION_NOT_FOUND));
 
-        // Object Key 가져오기
+        // Step2와 동일하게 audioFileUrl 하나만 사용
         String objectKey = submission.getAudioFileUrl();
 
         if (objectKey == null || objectKey.trim().isEmpty()) {

@@ -83,3 +83,11 @@ security:
       secret-key: ${BASE64_SECRET_KEY}
       access-expire-length: 3600000 # 1 hour
       refresh-expire-length: 1209600000 # 2 weeks
+
+# FastAPI 연동 설정
+fastapi:
+  base-url: ${FASTAPI_BASE_URL:http://localhost:8000}
+  callback-url: ${FASTAPI_CALLBACK_URL:http://localhost:8080/api/v1/evaluations/callback}
+  timeout:
+    connection: 5000  # 5초
+    response: 10000   # 10초

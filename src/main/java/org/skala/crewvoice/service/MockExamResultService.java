@@ -26,6 +26,7 @@ import org.skala.crewvoice.repository.SubmissionStep2Repository;
 import org.skala.crewvoice.repository.SubmissionStep3Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.skala.crewvoice.domain.Language;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -142,7 +143,7 @@ public class MockExamResultService {
 
         // 3. 한국어와 영어 평가 구분
         EvaluationStep2 koreanEval = evaluations.stream()
-                .filter(e -> "ko-KR".equalsIgnoreCase(e.getLanguage()))
+                .filter(e -> e.getLanguage() == org.skala.crewvoice.domain.Language.KOREAN)
                 .findFirst()
                 .orElseThrow(() -> {
                     log.error("한국어 평가 결과를 찾을 수 없음 - submissionId: {}", submission.getSubmissionId());
@@ -150,7 +151,7 @@ public class MockExamResultService {
                 });
 
         EvaluationStep2 englishEval = evaluations.stream()
-                .filter(e -> "en-US".equalsIgnoreCase(e.getLanguage()))
+                .filter(e -> e.getLanguage() == org.skala.crewvoice.domain.Language.ENGLISH)
                 .findFirst()
                 .orElseThrow(() -> {
                     log.error("영어 평가 결과를 찾을 수 없음 - submissionId: {}", submission.getSubmissionId());
@@ -203,7 +204,7 @@ public class MockExamResultService {
 
             // 한국어와 영어 평가 구분
             EvaluationStep3 koreanEval = evaluations.stream()
-                    .filter(e -> "ko-KR".equalsIgnoreCase(e.getLanguage()))
+                    .filter(e -> e.getLanguage() == Language.KOREAN)
                     .findFirst()
                     .orElseThrow(() -> {
                         log.error("한국어 평가 결과를 찾을 수 없음 - submissionId: {}, partOrder: {}",
@@ -212,7 +213,7 @@ public class MockExamResultService {
                     });
 
             EvaluationStep3 englishEval = evaluations.stream()
-                    .filter(e -> "en-US".equalsIgnoreCase(e.getLanguage()))
+                    .filter(e -> e.getLanguage() == Language.ENGLISH)
                     .findFirst()
                     .orElseThrow(() -> {
                         log.error("영어 평가 결과를 찾을 수 없음 - submissionId: {}, partOrder: {}",

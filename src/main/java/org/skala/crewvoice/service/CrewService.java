@@ -65,11 +65,14 @@ public class CrewService {
                 .map(targetUser -> targetUser.getUser().getId())
                 .collect(Collectors.toList());
 
-        // 4. Users 테이블에서 대상자 정보 조회
-        List<User> targetCrewMembers = targetUserIds.stream()
-                .map(userId -> userRepository.findById(userId)
-                        .orElseThrow(() -> new EntityNotFoundException(ErrorCode.USER_NOT_FOUND)))
-                .collect(Collectors.toList());
+        // 4. Users 테이블에서 대상자 정보 조회 (단일 쿼리로 N+1 문제 해결)
+        List<User> targetCrewMembers = userRepository.findAllByIds(targetUserIds);
+
+        // 조회된 사용자 수 검증 (일부 사용자가 삭제된 경우 대비)
+        if (targetCrewMembers.size() != targetUserIds.size()) {
+            log.warn("일부 평가 대상 사용자를 찾을 수 없습니다. 예상: {}, 실제: {}",
+                    targetUserIds.size(), targetCrewMembers.size());
+        }
 
         // 5. 키워드로 필터링 (이름 또는 사번 검색)
         List<User> filteredCrewMembers = targetCrewMembers;

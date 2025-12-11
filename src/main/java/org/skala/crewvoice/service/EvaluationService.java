@@ -271,6 +271,16 @@ public class EvaluationService {
      */
     private void sendEvaluationRequest(String taskId, String audioUrl, String script,
                                        String languageCode, EvaluationStep2 evaluation) {
+        sendFastAPIRequest(taskId, audioUrl, script, languageCode,
+                () -> markEvaluationStep2AsFailed(evaluation.getId(), "FastAPI 요청 실패"));
+    }
+
+    /**
+     * 공통 FastAPI 요청 전송 로직
+     * Step2와 Step3에서 공통으로 사용
+     */
+    private void sendFastAPIRequest(String taskId, String audioUrl, String script,
+                                     String languageCode, Runnable onFailure) {
         FastAPIEvaluationRequest fastapiRequest = FastAPIEvaluationRequest.builder()
                 .taskId(taskId)
                 .audioUrl(audioUrl)
@@ -292,9 +302,7 @@ public class EvaluationService {
                         error -> {
                             log.error("FastAPI 평가 요청 실패 - taskId: {}, error: {}",
                                     taskId, error.getMessage());
-                            // 평가 상태를 FAILED로 변경 (별도 트랜잭션)
-                            markEvaluationStep2AsFailed(evaluation.getId(),
-                                    "FastAPI 요청 실패: " + error.getMessage());
+                            onFailure.run();
                         }
                 );
     }
@@ -401,32 +409,8 @@ public class EvaluationService {
      */
     private void sendEvaluationRequestForStep3(String taskId, String audioUrl, String script,
                                                String languageCode, EvaluationStep3 evaluation) {
-        FastAPIEvaluationRequest fastapiRequest = FastAPIEvaluationRequest.builder()
-                .taskId(taskId)
-                .audioUrl(audioUrl)
-                .script(script)
-                .language(languageCode)
-                .callbackUrl(fastapiCallbackUrl)
-                .build();
-
-        log.info("FastAPI 요청 DTO 생성 완료 - taskId: {}, callbackUrl: {}", taskId, fastapiCallbackUrl);
-
-        // WebClient로 FastAPI 비동기 호출 (Fire-and-Forget)
-        fastapiWebClient.post()
-                .uri("/api/evaluate")
-                .bodyValue(fastapiRequest)
-                .retrieve()
-                .bodyToMono(Void.class)
-                .subscribe(
-                        result -> log.info("FastAPI 평가 요청 성공 - taskId: {}", taskId),
-                        error -> {
-                            log.error("FastAPI 평가 요청 실패 - taskId: {}, error: {}",
-                                    taskId, error.getMessage());
-                            // 평가 상태를 FAILED로 변경 (별도 트랜잭션)
-                            markEvaluationStep3AsFailed(evaluation.getId(),
-                                    "FastAPI 요청 실패: " + error.getMessage());
-                        }
-                );
+        sendFastAPIRequest(taskId, audioUrl, script, languageCode,
+                () -> markEvaluationStep3AsFailed(evaluation.getId(), "FastAPI 요청 실패"));
     }
 
     /**

@@ -51,6 +51,7 @@ public enum ErrorCode {
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U003", "이미 가입된 이메일입니다."),
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "U004", "잘못된 비밀번호입니다."),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "U005", "잘못된 인증 정보입니다."),
+    LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "U006", "이메일 또는 비밀번호가 잘못되었습니다."),
 
     // Auth - 인증 관련 에러
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "A001", "유효하지 않은 토큰입니다."),

@@ -72,11 +72,12 @@ public class AuthService implements UserDetailsService {
     }
 
     public LoginResponse login(LoginRequest loginRequest) {
+        // 보안을 위해 이메일 존재 여부와 비밀번호 오류를 구분하지 않고 동일한 에러 메시지 반환
         User user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new InvalidCredentialsException(ErrorCode.LOGIN_FAILED));
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new InvalidCredentialsException(ErrorCode.INVALID_PASSWORD);
+            throw new InvalidCredentialsException(ErrorCode.LOGIN_FAILED);
         }
 
         String accessToken = jwtTokenProvider.createAccessToken(user.getEmail());

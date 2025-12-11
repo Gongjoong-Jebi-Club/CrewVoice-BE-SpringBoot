@@ -1,6 +1,8 @@
 package org.skala.crewvoice.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.skala.crewvoice.domain.Gender;
+import org.skala.crewvoice.domain.Role;
 import org.skala.crewvoice.domain.User;
 import org.skala.crewvoice.domain.UserStatus;
 import org.skala.crewvoice.dto.request.LoginRequest;
@@ -51,13 +53,17 @@ public class AuthService implements UserDetailsService {
             throw new DuplicateEntityException(ErrorCode.DUPLICATE_EMAIL);
         }
 
+        // Role과 Gender를 Enum으로 변환
+        Role role = "ADMIN".equalsIgnoreCase(signUpRequest.getRole()) ? Role.ADMIN : Role.CREW;
+        Gender gender = Gender.fromString(signUpRequest.getGender());
+
         User user = new User(
                 signUpRequest.getName(),
                 signUpRequest.getEmployeeId(),
                 signUpRequest.getEmail(),
                 passwordEncoder.encode(signUpRequest.getPassword()),
-                signUpRequest.getRole(),
-                signUpRequest.getGender(),
+                role,
+                gender,
                 false, // is_mock_exam 기본값: false
                 UserStatus.ACTIVE // status 기본값: ACTIVE
         );
@@ -79,7 +85,7 @@ public class AuthService implements UserDetailsService {
         // Redis에 Refresh Token 저장 (클라이언트에는 전송하지 않음)
         redisService.set("RT:" + user.getEmail(), refreshToken, refreshTokenValidityInMilliseconds, TimeUnit.MILLISECONDS);
 
-        return new LoginResponse(accessToken, user.getRole());
+        return new LoginResponse(accessToken, user.getRole().name());
     }
 
     @Transactional
@@ -147,7 +153,7 @@ public class AuthService implements UserDetailsService {
         // Redis에 Refresh Token 저장 (테스트를 위해)
         redisService.set("RT:" + user.getEmail(), refreshToken, refreshTokenValidityInMilliseconds, TimeUnit.MILLISECONDS);
 
-        return new LoginResponse(expiredAccessToken, user.getRole());
+        return new LoginResponse(expiredAccessToken, user.getRole().name());
     }
 
     @Override

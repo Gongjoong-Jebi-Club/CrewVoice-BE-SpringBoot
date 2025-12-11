@@ -1,5 +1,6 @@
 package org.skala.crewvoice.service;
 
+import org.skala.crewvoice.domain.Role;
 import org.skala.crewvoice.domain.User;
 import org.skala.crewvoice.domain.UserStatus;
 import org.skala.crewvoice.dto.request.ResetPasswordRequest;
@@ -38,7 +39,14 @@ public class UserService {
         if ((keyword == null || keyword.isBlank()) && (role == null || role.isBlank())) {
             return getAllActiveUsers();
         }
-        return userRepository.searchUsers(keyword, role, UserStatus.ACTIVE)
+
+        // String role을 Enum으로 변환
+        Role roleEnum = null;
+        if (role != null && !role.isBlank()) {
+            roleEnum = "ADMIN".equalsIgnoreCase(role) ? Role.ADMIN : Role.CREW;
+        }
+
+        return userRepository.searchUsers(keyword, roleEnum, UserStatus.ACTIVE)
                 .stream()
                 .map(UserResponse::from)
                 .collect(Collectors.toList());

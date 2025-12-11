@@ -2,7 +2,9 @@ package org.skala.crewvoice.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.skala.crewvoice.dto.response.ApiResponse;
+import org.skala.crewvoice.exception.custom.DuplicateEntityException;
 import org.skala.crewvoice.exception.custom.EntityNotFoundException;
+import org.skala.crewvoice.exception.custom.InvalidCredentialsException;
 import org.springframework.http.HttpStatus;
 import org.skala.crewvoice.exception.custom.InvalidRequestException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -25,6 +27,22 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidRequestException.class)
     public ResponseEntity<ApiResponse<?>> handleInvalidRequestException(InvalidRequestException e) {
         log.error("Invalid request: {}", e.getMessage());
+
+        ApiResponse<?> apiResponse = ApiResponse.failure(e.getErrorCode().getStatus().value(), e.getMessage());
+        return new ResponseEntity<>(apiResponse, e.getErrorCode().getStatus());
+    }
+
+    @ExceptionHandler(DuplicateEntityException.class)
+    public ResponseEntity<ApiResponse<?>> handleDuplicateEntityException(DuplicateEntityException e) {
+        log.error("Duplicate entity: {}", e.getMessage());
+
+        ApiResponse<?> apiResponse = ApiResponse.failure(e.getErrorCode().getStatus().value(), e.getMessage());
+        return new ResponseEntity<>(apiResponse, e.getErrorCode().getStatus());
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiResponse<?>> handleInvalidCredentialsException(InvalidCredentialsException e) {
+        log.error("Invalid credentials: {}", e.getMessage());
 
         ApiResponse<?> apiResponse = ApiResponse.failure(e.getErrorCode().getStatus().value(), e.getMessage());
         return new ResponseEntity<>(apiResponse, e.getErrorCode().getStatus());

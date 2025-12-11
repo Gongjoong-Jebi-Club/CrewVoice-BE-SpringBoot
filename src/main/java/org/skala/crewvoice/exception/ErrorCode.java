@@ -48,6 +48,15 @@ public enum ErrorCode {
     // User - 사용자 관련 에러
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "User not found"),
     DUPLICATE_USER(HttpStatus.CONFLICT, "U002", "Duplicate user"),
+    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U003", "이미 가입된 이메일입니다."),
+    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "U004", "잘못된 비밀번호입니다."),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "U005", "잘못된 인증 정보입니다."),
+
+    // Auth - 인증 관련 에러
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "A001", "유효하지 않은 토큰입니다."),
+    INVALID_AUTH_HEADER(HttpStatus.BAD_REQUEST, "A002", "Authorization 헤더가 없거나 형식이 잘못되었습니다."),
+    REFRESH_TOKEN_NOT_FOUND(HttpStatus.UNAUTHORIZED, "A003", "저장된 Refresh Token이 없습니다. 다시 로그인해주세요."),
+    REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "A004", "Refresh Token이 만료되었습니다. 다시 로그인해주세요."),
 
     // Evaluation - 평가 관련 에러
     EVALUATION_NOT_FOUND(HttpStatus.NOT_FOUND, "E001", "Evaluation not found"),

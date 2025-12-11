@@ -3,6 +3,8 @@ package org.skala.crewvoice.util;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
+import org.skala.crewvoice.exception.ErrorCode;
+import org.skala.crewvoice.exception.custom.InvalidCredentialsException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -76,7 +78,7 @@ public class JwtTokenProvider {
             return e.getClaims().getSubject();
         } catch (JwtException | IllegalArgumentException e) {
             log.error("Invalid JWT token: {}", e.getMessage());
-            throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
+            throw new InvalidCredentialsException(ErrorCode.INVALID_TOKEN);
         }
     }
 

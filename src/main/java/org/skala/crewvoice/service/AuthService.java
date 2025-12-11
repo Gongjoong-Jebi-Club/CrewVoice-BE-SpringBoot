@@ -8,6 +8,10 @@ import org.skala.crewvoice.dto.request.SignUpRequest;
 import org.skala.crewvoice.dto.response.LoginResponse;
 import org.skala.crewvoice.dto.response.SignUpResponse;
 import org.skala.crewvoice.dto.response.TokenRefreshResponse;
+import org.skala.crewvoice.exception.ErrorCode;
+import org.skala.crewvoice.exception.custom.DuplicateEntityException;
+import org.skala.crewvoice.exception.custom.EntityNotFoundException;
+import org.skala.crewvoice.exception.custom.InvalidCredentialsException;
 import org.skala.crewvoice.repository.UserRepository;
 import org.skala.crewvoice.util.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,7 +48,7 @@ public class AuthService implements UserDetailsService {
     @Transactional
     public SignUpResponse signUp(SignUpRequest signUpRequest) {
         if (userRepository.findByEmail(signUpRequest.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+            throw new DuplicateEntityException(ErrorCode.DUPLICATE_EMAIL);
         }
 
         User user = new User(
@@ -63,10 +67,10 @@ public class AuthService implements UserDetailsService {
 
     public LoginResponse login(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("잘못된 비밀번호입니다.");
+            throw new InvalidCredentialsException(ErrorCode.INVALID_PASSWORD);
         }
 
         String accessToken = jwtTokenProvider.createAccessToken(user.getEmail());
@@ -98,7 +102,7 @@ public class AuthService implements UserDetailsService {
         // 1. Authorization 헤더에서 Access Token 추출
         final String bearerToken = request.getHeader("Authorization");
         if (!StringUtils.hasText(bearerToken) || !bearerToken.startsWith("Bearer ")) {
-            throw new IllegalArgumentException("Authorization 헤더가 없거나 형식이 잘못되었습니다.");
+            throw new InvalidCredentialsException(ErrorCode.INVALID_AUTH_HEADER);
         }
         String accessToken = bearerToken.substring(7);
 
@@ -108,14 +112,14 @@ public class AuthService implements UserDetailsService {
         // 3. Redis에서 해당 사용자의 Refresh Token 조회
         String storedRefreshToken = (String) redisService.get("RT:" + email);
         if (storedRefreshToken == null) {
-            throw new IllegalArgumentException("저장된 Refresh Token이 없습니다. 다시 로그인해주세요.");
+            throw new InvalidCredentialsException(ErrorCode.REFRESH_TOKEN_NOT_FOUND);
         }
 
         // 4. Redis에 저장된 Refresh Token 유효성 검증
         if (!jwtTokenProvider.validateToken(storedRefreshToken)) {
             // Refresh Token도 만료된 경우 Redis에서 삭제
             redisService.delete("RT:" + email);
-            throw new IllegalArgumentException("Refresh Token이 만료되었습니다. 다시 로그인해주세요.");
+            throw new InvalidCredentialsException(ErrorCode.REFRESH_TOKEN_EXPIRED);
         }
 
         // 5. 새로운 Access Token 생성
@@ -130,10 +134,10 @@ public class AuthService implements UserDetailsService {
      */
     public LoginResponse createExpiredTokenForTest(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("잘못된 비밀번호입니다.");
+            throw new InvalidCredentialsException(ErrorCode.INVALID_PASSWORD);
         }
 
         // 이미 만료된 Access Token 생성

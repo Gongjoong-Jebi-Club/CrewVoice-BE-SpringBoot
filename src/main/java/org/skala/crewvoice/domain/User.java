@@ -38,7 +38,7 @@ public class User extends BaseTimeEntity implements UserDetails {
     private Role role;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 1)
+    @Column(nullable = false)
     private Gender gender;
 
     @Column(name = "is_mock_exam", nullable = false)

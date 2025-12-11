@@ -24,9 +24,9 @@ import org.springframework.web.multipart.MultipartFile;
 public class SubmissionStep3Service {
 
     private final SubmissionStep3Repository submissionStep3Repository;
-    private final EvaluationRepository evaluationRepository;
     private final QuestionStep3Repository questionStep3Repository;
     private final S3Service s3Service;
+    private final SubmissionHelper submissionHelper;
 
     /**
      * STEP3 음성 파일 제출
@@ -42,16 +42,15 @@ public class SubmissionStep3Service {
                 user.getId(), request.getEvaluationId(), request.getQuestionId(),
                 request.getPartOrder(), request.getLanguage());
 
-        // 1. Evaluation 존재 확인
-        Evaluation evaluation = evaluationRepository.findById(request.getEvaluationId())
-                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND));
+        // 1. Evaluation 존재 확인 (SubmissionHelper 사용)
+        Evaluation evaluation = submissionHelper.findEvaluation(request.getEvaluationId());
 
         // 2. Question 존재 확인
         QuestionStep3 question = questionStep3Repository.findById(request.getQuestionId())
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.QUESTION_NOT_FOUND));
 
-        // 3. String 언어 코드를 Language Enum으로 변환
-        Language language = Language.fromCode(request.getLanguage());
+        // 3. String 언어 코드를 Language Enum으로 변환 (SubmissionHelper 사용)
+        Language language = submissionHelper.parseLanguage(request.getLanguage());
 
         // 4. S3에 음성 파일 업로드 (Object Key 저장)
         String objectKey = s3Service.uploadFileForStep3(audioFile, request.getEvaluationId(),

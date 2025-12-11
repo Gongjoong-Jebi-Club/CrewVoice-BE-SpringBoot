@@ -27,7 +27,7 @@ public class UserResponse {
                 user.getName(),
                 user.getEmployeeId(),
                 user.getEmail(),
-                user.getRole(),
+                user.getRole().name(),
                 user.getCreatedAt()
         );
     }

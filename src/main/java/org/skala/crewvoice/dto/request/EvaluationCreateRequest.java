@@ -7,8 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.skala.crewvoice.domain.EvaluationType;
-import org.skala.crewvoice.exception.ErrorCode;
-import org.skala.crewvoice.exception.custom.InvalidRequestException;
+import org.skala.crewvoice.validation.ValidDateRange;
+import org.skala.crewvoice.validation.ValidWeightSum;
 
 import jakarta.validation.constraints.*;
 import java.time.OffsetDateTime;
@@ -20,6 +20,8 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "평가 생성 요청")
+@ValidWeightSum
+@ValidDateRange
 public class EvaluationCreateRequest {
 
     @NotBlank(message = "평가 이름은 필수입니다")
@@ -83,36 +85,4 @@ public class EvaluationCreateRequest {
     @JsonProperty("weight_speed")
     @Schema(description = "속도 평가 가중치", example = "10", required = true)
     private Integer weightSpeed;
-
-    /**
-     * 가중치 합계 검증
-     */
-    public void validateWeightSum() {
-        int sum = weightPronunciation + weightIntonation + weightAccent
-                + weightPause + weightTone + weightSpeed;
-        if (sum != 100) {
-            throw new InvalidRequestException(
-                    "가중치 합계는 100이어야 합니다. 현재 합계: " + sum,
-                    ErrorCode.INVALID_INPUT_VALUE
-            );
-        }
-    }
-
-    /**
-     * 날짜 범위 검증
-     */
-    public void validateDateRange() {
-        if (startDate.isAfter(endDate)) {
-            throw new InvalidRequestException(
-                    "시작 날짜는 종료 날짜보다 이전이어야 합니다.",
-                    ErrorCode.INVALID_INPUT_VALUE
-            );
-        }
-        if (startDate.isBefore(OffsetDateTime.now())) {
-            throw new InvalidRequestException(
-                    "시작 날짜는 현재 시간 이후여야 합니다.",
-                    ErrorCode.INVALID_INPUT_VALUE
-            );
-        }
-    }
 }

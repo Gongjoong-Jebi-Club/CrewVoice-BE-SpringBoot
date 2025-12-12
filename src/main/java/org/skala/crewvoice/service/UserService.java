@@ -43,7 +43,20 @@ public class UserService {
         // String role을 Enum으로 변환
         Role roleEnum = null;
         if (role != null && !role.isBlank()) {
-            roleEnum = "ADMIN".equalsIgnoreCase(role) ? Role.ADMIN : Role.CREW;
+            String roleUpper = role.toUpperCase();
+            switch (roleUpper) {
+                case "ADMIN":
+                    roleEnum = Role.ADMIN;
+                    break;
+                case "MANAGER":
+                    roleEnum = Role.MANAGER;
+                    break;
+                case "CREW":
+                    roleEnum = Role.CREW;
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid role: " + role + ". Must be ADMIN, MANAGER, or CREW");
+            }
         }
 
         return userRepository.searchUsers(keyword, roleEnum, UserStatus.ACTIVE)

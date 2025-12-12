@@ -93,10 +93,10 @@ public class User extends BaseTimeEntity implements UserDetails {
     // ===== 비즈니스 로직 메서드 =====
 
     /**
-     * 사용자가 관리자 역할인지 확인
+     * 사용자가 관리자 역할인지 확인 (ADMIN 또는 MANAGER)
      */
     public boolean isAdmin() {
-        return this.role == Role.ADMIN;
+        return this.role == Role.ADMIN || this.role == Role.MANAGER;
     }
 
     /**

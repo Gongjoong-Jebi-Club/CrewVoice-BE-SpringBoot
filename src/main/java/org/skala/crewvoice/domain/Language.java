@@ -29,7 +29,7 @@ public enum Language {
                 return language;
             }
         }
-        throw new IllegalArgumentException("Invalid language code: " + code + ". Must be 'kor' or 'eng'");
+        throw new IllegalArgumentException("Invalid language code: " + code + ". Must be 'ko-KR' or 'en-US'");
     }
 
     /**

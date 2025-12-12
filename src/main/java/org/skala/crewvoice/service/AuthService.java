@@ -54,7 +54,19 @@ public class AuthService implements UserDetailsService {
         }
 
         // Role과 Gender를 Enum으로 변환
-        Role role = "ADMIN".equalsIgnoreCase(signUpRequest.getRole()) ? Role.ADMIN : Role.CREW;
+        Role role;
+        String roleStr = signUpRequest.getRole().toUpperCase();
+        switch (roleStr) {
+            case "ADMIN":
+                role = Role.ADMIN;
+                break;
+            case "MANAGER":
+                role = Role.MANAGER;
+                break;
+            default:
+                role = Role.CREW;
+                break;
+        }
         Gender gender = Gender.fromString(signUpRequest.getGender());
 
         User user = new User(

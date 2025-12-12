@@ -10,6 +10,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 public class CrewVoiceApplication {
 
     public static void main(String[] args) {
+        // Windows 호환성: Netty 네이티브 전송(epoll) 비활성화
+        System.setProperty("reactor.netty.native", "false");
+
         // .env 파일 로드
         Dotenv dotenv = Dotenv.configure()
                 .ignoreIfMissing()

@@ -43,7 +43,7 @@ public class WebClientConfig {
      */
     @Bean
     public WebClient fastapiWebClient() {
-        // HttpClient 설정 (Netty 기반)
+        // HttpClient 설정 (Netty 기반, NIO 강제 사용)
         HttpClient httpClient = HttpClient.create()
                 // Connection Timeout 설정
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeout)
@@ -53,7 +53,9 @@ public class WebClientConfig {
                 .doOnConnected(conn -> conn
                         .addHandlerLast(new ReadTimeoutHandler(responseTimeout, TimeUnit.MILLISECONDS))
                         .addHandlerLast(new WriteTimeoutHandler(responseTimeout, TimeUnit.MILLISECONDS))
-                );
+                )
+                // Windows 호환성을 위해 NIO 강제 사용 (epoll 비활성화)
+                .runOn(reactor.netty.resources.LoopResources.create("fastapi-http"));
 
         return WebClient.builder()
                 .baseUrl(fastapiBaseUrl)

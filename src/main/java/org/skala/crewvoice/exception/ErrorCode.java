@@ -48,6 +48,16 @@ public enum ErrorCode {
     // User - 사용자 관련 에러
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "User not found"),
     DUPLICATE_USER(HttpStatus.CONFLICT, "U002", "Duplicate user"),
+    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U003", "이미 가입된 이메일입니다."),
+    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "U004", "잘못된 비밀번호입니다."),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "U005", "잘못된 인증 정보입니다."),
+    LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "U006", "이메일 또는 비밀번호가 잘못되었습니다."),
+
+    // Auth - 인증 관련 에러
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "A001", "유효하지 않은 토큰입니다."),
+    INVALID_AUTH_HEADER(HttpStatus.BAD_REQUEST, "A002", "Authorization 헤더가 없거나 형식이 잘못되었습니다."),
+    REFRESH_TOKEN_NOT_FOUND(HttpStatus.UNAUTHORIZED, "A003", "저장된 Refresh Token이 없습니다. 다시 로그인해주세요."),
+    REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "A004", "Refresh Token이 만료되었습니다. 다시 로그인해주세요."),
 
     // Evaluation - 평가 관련 에러
     EVALUATION_NOT_FOUND(HttpStatus.NOT_FOUND, "E001", "Evaluation not found"),
@@ -79,7 +89,41 @@ public enum ErrorCode {
     QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "Q001", "문제를 찾을 수 없습니다."),
     QUESTION_BANK_FETCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "Q002", "문제은행 정보를 불러오지 못했습니다."),
     INVALID_QUESTION_STEP(HttpStatus.BAD_REQUEST, "Q003", "유효하지 않은 STEP입니다."),
-    ALREADY_DELETED_QUESTION(HttpStatus.BAD_REQUEST, "Q004", "이미 삭제된 문제입니다.");
+    ALREADY_DELETED_QUESTION(HttpStatus.BAD_REQUEST, "Q004", "이미 삭제된 문제입니다."),
+    NO_QUESTIONS_AVAILABLE(HttpStatus.NOT_FOUND, "Q005", "사용 가능한 문제가 없습니다."),
+    QUESTION_IN_USE(HttpStatus.CONFLICT, "Q006", "현재 사용 중인 문제는 삭제할 수 없습니다."),
+
+    // Submission - 제출 관련 에러
+    DUPLICATE_SUBMISSION(HttpStatus.CONFLICT, "SUB001", "이미 제출한 답변입니다."),
+    INVALID_ANSWER_OPTION(HttpStatus.BAD_REQUEST, "SUB002", "유효하지 않은 답변입니다."),
+
+    // Audio File - 오디오 파일 관련 에러
+    AUDIO_FILE_INVALID(HttpStatus.BAD_REQUEST, "AF001", "유효하지 않은 오디오 파일입니다."),
+    AUDIO_FILE_EMPTY(HttpStatus.BAD_REQUEST, "AF002", "빈 파일은 업로드할 수 없습니다."),
+    AUDIO_FILE_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "AF003", "파일 크기가 너무 큽니다. 최대 10MB까지 업로드 가능합니다."),
+    AUDIO_FILE_WRONG_FORMAT(HttpStatus.BAD_REQUEST, "AF004", "WAV 형식의 오디오 파일만 업로드 가능합니다."),
+
+    // S3 - S3 관련 에러
+    S3_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3001", "파일 업로드에 실패했습니다."),
+    S3_UPLOAD_TIMEOUT(HttpStatus.GATEWAY_TIMEOUT, "S3002", "파일 업로드 시간이 초과되었습니다."),
+    S3_CONNECTION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "S3003", "스토리지 서비스에 연결할 수 없습니다."),
+
+    // FastAPI Integration - FastAPI 연동 에러
+    FASTAPI_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "API001", "평가 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요."),
+    FASTAPI_TIMEOUT(HttpStatus.GATEWAY_TIMEOUT, "API002", "평가 처리 시간이 초과되었습니다."),
+    FASTAPI_INVALID_RESPONSE(HttpStatus.BAD_GATEWAY, "API003", "평가 서비스로부터 잘못된 응답을 받았습니다."),
+
+    // Evaluation Status - 평가 상태 관련 에러
+    EVALUATION_NOT_STARTED_YET(HttpStatus.BAD_REQUEST, "EV001", "평가 시작 기간이 아닙니다."),
+    EVALUATION_ALREADY_ENDED(HttpStatus.BAD_REQUEST, "EV002", "평가 종료 기간이 지났습니다."),
+    EVALUATION_ALREADY_IN_PROGRESS(HttpStatus.CONFLICT, "EV003", "이미 진행 중인 평가입니다."),
+    EVALUATION_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "EV004", "평가가 아직 완료되지 않았습니다."),
+    EVALUATION_HAS_NO_CREWS(HttpStatus.NOT_FOUND, "EV005", "해당 평가에 배정된 평가 대상자가 없습니다."),
+
+    // Result - 결과 관련 에러
+    NO_SUBMISSION_FOUND(HttpStatus.NOT_FOUND, "RES001", "제출 내역이 없습니다."),
+    STEP_NOT_COMPLETED(HttpStatus.NOT_FOUND, "RES002", "해당 단계를 완료하지 않았습니다."),
+    RESULT_NOT_AVAILABLE_YET(HttpStatus.BAD_REQUEST, "RES003", "아직 결과를 확인할 수 없습니다.");
 
     /** HTTP 상태 코드 */
     private final HttpStatus status;

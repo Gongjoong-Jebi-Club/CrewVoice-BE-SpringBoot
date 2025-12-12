@@ -68,33 +68,27 @@ public class SubmissionStep2Controller {
             @Parameter(description = "제출 메타데이터 (JSON)", required = true,
                       schema = @Schema(implementation = SubmissionStep2Request.class))
             @RequestPart("metadata") String metadata
-    ) {
-        try {
-            log.info("POST /api/v1/submissions/step2 - 음성 파일 제출 요청 (userId: {})", user.getId());
+    ) throws Exception {
+        log.info("POST /api/v1/submissions/step2 - 음성 파일 제출 요청 (userId: {})", user.getId());
 
-            // JSON metadata를 DTO로 변환
-            SubmissionStep2Request request = objectMapper.readValue(metadata, SubmissionStep2Request.class);
+        // JSON metadata를 DTO로 변환 (JsonProcessingException 발생 가능 -> GlobalExceptionHandler에서 처리)
+        SubmissionStep2Request request = objectMapper.readValue(metadata, SubmissionStep2Request.class);
 
-            // 수동 Validation
-            Set<ConstraintViolation<SubmissionStep2Request>> violations = validator.validate(request);
-            if (!violations.isEmpty()) {
-                String errorMessage = violations.stream()
-                        .map(ConstraintViolation::getMessage)
-                        .collect(Collectors.joining(", "));
-                log.error("Validation 실패 - {}", errorMessage);
-                throw new InvalidRequestException(ErrorCode.INVALID_INPUT_VALUE);
-            }
-
-            // 서비스 호출
-            SubmissionStep2Response response = submissionStep2Service.submitAudio(user, audioFile, request);
-
-            log.info("음성 파일 제출 성공 - submissionId: {}", response.getSubmissionId());
-
-            return ResponseEntity.ok(ApiResponse.success(response));
-
-        } catch (Exception e) {
-            log.error("음성 파일 제출 실패 - Error: {}", e.getMessage(), e);
-            throw new RuntimeException("음성 파일 제출 처리 중 오류가 발생했습니다.", e);
+        // 수동 Validation
+        Set<ConstraintViolation<SubmissionStep2Request>> violations = validator.validate(request);
+        if (!violations.isEmpty()) {
+            String errorMessage = violations.stream()
+                    .map(ConstraintViolation::getMessage)
+                    .collect(Collectors.joining(", "));
+            log.error("Validation 실패 - {}", errorMessage);
+            throw new InvalidRequestException(ErrorCode.INVALID_INPUT_VALUE);
         }
+
+        // 서비스 호출 (특정 예외들은 GlobalExceptionHandler에서 처리됨)
+        SubmissionStep2Response response = submissionStep2Service.submitAudio(user, audioFile, request);
+
+        log.info("음성 파일 제출 성공 - submissionId: {}", response.getSubmissionId());
+
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

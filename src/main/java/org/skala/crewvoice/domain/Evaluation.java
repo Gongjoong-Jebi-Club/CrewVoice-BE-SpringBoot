@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 평가(시험) 엔티티
@@ -111,5 +112,114 @@ public class Evaluation extends BaseTimeEntity {
                     ErrorCode.INVALID_INPUT_VALUE
             );
         }
+    }
+
+    // ===== 비즈니스 로직 메서드 =====
+
+    /**
+     * 평가가 현재 진행 중인지 확인
+     *
+     * @return 진행 중이면 true
+     */
+    public boolean isActive() {
+        OffsetDateTime now = OffsetDateTime.now();
+        return now.isAfter(startDate) && now.isBefore(endDate);
+    }
+
+    /**
+     * 평가가 아직 시작하지 않았는지 확인
+     *
+     * @return 시작 전이면 true
+     */
+    public boolean isUpcoming() {
+        return OffsetDateTime.now().isBefore(startDate);
+    }
+
+    /**
+     * 평가가 종료되었는지 확인
+     *
+     * @return 종료되었으면 true
+     */
+    public boolean isCompleted() {
+        return OffsetDateTime.now().isAfter(endDate);
+    }
+
+    /**
+     * 제출을 받을 수 있는 상태인지 확인
+     *
+     * @return 제출 가능하면 true
+     */
+    public boolean canAcceptSubmission() {
+        return isActive();
+    }
+
+    /**
+     * 실전 평가인지 확인
+     *
+     * @return 실전 평가면 true
+     */
+    public boolean isExam() {
+        return this.evaluationType == EvaluationType.EXAM;
+    }
+
+    /**
+     * 모의 평가인지 확인
+     *
+     * @return 모의 평가면 true
+     */
+    public boolean isMock() {
+        return this.evaluationType == EvaluationType.MOCK;
+    }
+
+    /**
+     * 가중치 총합 계산
+     *
+     * @return 가중치 총합
+     */
+    public BigDecimal getTotalWeight() {
+        return weightPronunciation
+                .add(weightPause)
+                .add(weightIntonation)
+                .add(weightTone)
+                .add(weightSpeed)
+                .add(weightAccent);
+    }
+
+    /**
+     * 평가 항목별 가중치 맵 반환
+     *
+     * @return 항목명: 가중치 맵
+     */
+    public Map<String, BigDecimal> getWeightMap() {
+        return Map.of(
+                "pronunciation", weightPronunciation,
+                "pause", weightPause,
+                "intonation", weightIntonation,
+                "tone", weightTone,
+                "speed", weightSpeed,
+                "accent", weightAccent
+        );
+    }
+
+    /**
+     * 평가 기간이 유효한지 확인 (현재 시각 기준)
+     *
+     * @return 유효한 기간이면 true
+     */
+    public boolean hasValidPeriod() {
+        return startDate.isBefore(endDate);
+    }
+
+    /**
+     * 남은 기간(일) 계산
+     *
+     * @return 남은 일수 (음수면 이미 종료)
+     */
+    public long getRemainingDays() {
+        OffsetDateTime now = OffsetDateTime.now();
+        if (now.isAfter(endDate)) {
+            return -1;
+        }
+        return java.time.Duration.between(now, endDate).toDays();
     }
 }

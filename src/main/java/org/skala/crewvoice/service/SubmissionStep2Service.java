@@ -70,15 +70,21 @@ public class SubmissionStep2Service {
 
         log.info("STEP2 제출 완료 - submissionId: {}", savedSubmission.getSubmissionId());
 
-        // 6. 자동으로 FastAPI 평가 시작 (비동기)
-        try {
-            evaluationService.startEvaluationAsync(savedSubmission.getSubmissionId(), 2);
-            log.info("FastAPI 평가 요청 자동 전송 완료 - submissionId: {}", savedSubmission.getSubmissionId());
-        } catch (Exception e) {
-            log.error("FastAPI 평가 요청 실패 - submissionId: {}, error: {}",
-                    savedSubmission.getSubmissionId(), e.getMessage(), e);
-            // 평가 시작 실패해도 제출은 성공으로 처리 (백그라운드 작업이므로)
-        }
+        // 6. 자동으로 FastAPI 평가 시작 (비동기) - 트랜잭션 커밋 후 실행
+        org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+            new org.springframework.transaction.support.TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        log.info("트랜잭션 커밋 완료, FastAPI 평가 요청 시작 - submissionId: {}", savedSubmission.getSubmissionId());
+                        evaluationService.startEvaluationAsync(savedSubmission.getSubmissionId(), 2);
+                    } catch (Exception e) {
+                        log.error("FastAPI 평가 요청 스케줄링 실패 - submissionId: {}, error: {}",
+                                savedSubmission.getSubmissionId(), e.getMessage(), e);
+                    }
+                }
+            }
+        );
 
         // 7. Response 생성
         return SubmissionStep2Response.of(

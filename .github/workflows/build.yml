@@ -132,7 +132,10 @@ jobs:
               -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
               -e BASE64_SECRET_KEY=${{ secrets.BASE64_SECRET_KEY }} \
               -e CALLBACK_API_KEY=${{ secrets.CALLBACK_API_KEY }} \
+              -e FASTAPI_BASE_URL=https://ai.crewvoice.cloud \
+              -e FASTAPI_CALLBACK_URL=https://server.crewvoice.cloud/api/v1/evaluations/callback \
               --restart always $IMAGE_NAME:latest
+
 
 
 

@@ -1,6 +1,7 @@
 package org.skala.crewvoice.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.skala.crewvoice.domain.Evaluation;
 import org.skala.crewvoice.domain.QuestionStep1;
 import org.skala.crewvoice.domain.SubmissionStep1;
@@ -15,6 +16,7 @@ import org.skala.crewvoice.repository.SubmissionStep1Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -23,6 +25,7 @@ public class SubmissionStep1Service {
     private final SubmissionStep1Repository submissionStep1Repository;
     private final QuestionStep1Repository questionStep1Repository;
     private final EvaluationRepository evaluationRepository;
+    private final FinalGradeService finalGradeService;
 
     /**
      * STEP1 답안 제출 및 채점
@@ -59,6 +62,27 @@ public class SubmissionStep1Service {
 
         SubmissionStep1 savedSubmission = submissionStep1Repository.save(submission);
 
+        // 20개 문제를 모두 제출했는지 확인 후 FinalGrade 초기화
+        checkAndCreateFinalGrade(user, evaluation);
+
         return SubmissionStep1Response.of(savedSubmission.getId());
+    }
+
+    /**
+     * 20개 문제를 모두 제출했는지 확인 후 FinalGrade 생성
+     */
+    private void checkAndCreateFinalGrade(User user, Evaluation evaluation) {
+        long submissionCount = submissionStep1Repository.findAll().stream()
+                .filter(s -> s.getUser().getId().equals(user.getId())
+                        && s.getEvaluation().getEvaluationId().equals(evaluation.getEvaluationId()))
+                .count();
+
+        log.info("STEP1 제출 개수 확인 - userId: {}, evaluationId: {}, count: {}",
+                user.getId(), evaluation.getEvaluationId(), submissionCount);
+
+        if (submissionCount == 20) {
+            log.info("STEP1 20문제 제출 완료 - FinalGrade 초기 레코드 생성");
+            finalGradeService.createInitialFinalGrade(user.getId(), evaluation, user);
+        }
     }
 }

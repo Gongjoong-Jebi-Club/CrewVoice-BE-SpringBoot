@@ -8,6 +8,7 @@ import org.skala.crewvoice.dto.response.SubmissionStep3Response;
 import org.skala.crewvoice.exception.ErrorCode;
 import org.skala.crewvoice.exception.custom.EntityNotFoundException;
 import org.skala.crewvoice.repository.EvaluationRepository;
+import org.skala.crewvoice.repository.EvaluationTargetUserRepository;
 import org.skala.crewvoice.repository.QuestionStep3Repository;
 import org.skala.crewvoice.repository.SubmissionStep3Repository;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class SubmissionStep3Service {
 
     private final SubmissionStep3Repository submissionStep3Repository;
     private final QuestionStep3Repository questionStep3Repository;
+    private final EvaluationTargetUserRepository evaluationTargetUserRepository;
     private final S3Service s3Service;
     private final EvaluationService evaluationService;
     private final SubmissionHelper submissionHelper;
@@ -70,9 +72,15 @@ public class SubmissionStep3Service {
 
         SubmissionStep3 savedSubmission = submissionStep3Repository.save(submission);
 
-        log.info("STEP3 제출 완료 - submissionId: {}", savedSubmission.getSubmissionId());
+        log.info("STEP3 제출 완료 - submissionId: {}, partOrder: {}",
+                savedSubmission.getSubmissionId(), request.getPartOrder());
 
-        // 6. 자동으로 FastAPI 평가 시작 (비동기)
+        // 6. 평가 응시 여부 업데이트 (partOrder = 3일 때만 is_taken = true)
+        if (request.getPartOrder() == 3) {
+            updateEvaluationTakenStatus(user.getId(), request.getEvaluationId());
+        }
+
+        // 7. 자동으로 FastAPI 평가 시작 (비동기)
         try {
             evaluationService.startEvaluationAsync(savedSubmission.getSubmissionId(), 3);
             log.info("FastAPI 평가 요청 자동 전송 완료 - submissionId: {}", savedSubmission.getSubmissionId());
@@ -82,12 +90,31 @@ public class SubmissionStep3Service {
             // 평가 시작 실패해도 제출은 성공으로 처리 (백그라운드 작업이므로)
         }
 
-        // 7. Response 생성
+        // 8. Response 생성
         return SubmissionStep3Response.of(
                 savedSubmission.getSubmissionId(),
                 savedSubmission.getAudioFileUrl(),
                 audioFile.getSize(),
                 savedSubmission.getSubmittedAt()
         );
+    }
+
+    /**
+     * 평가 응시 여부 업데이트
+     * STEP3의 partOrder=3 제출 시 is_taken을 true로 업데이트
+     *
+     * @param userId 사용자 ID
+     * @param evaluationId 평가 ID
+     */
+    private void updateEvaluationTakenStatus(Long userId, Long evaluationId) {
+        evaluationTargetUserRepository.findByUserIdAndEvaluationId(userId, evaluationId)
+                .ifPresent(evaluationTargetUser -> {
+                    if (!evaluationTargetUser.getIsTaken()) {
+                        evaluationTargetUser.markAsTaken();
+                        evaluationTargetUserRepository.save(evaluationTargetUser);
+                        log.info("평가 응시 완료 - userId: {}, evaluationId: {}, STEP3 partOrder=3 제출 완료",
+                                userId, evaluationId);
+                    }
+                });
     }
 }

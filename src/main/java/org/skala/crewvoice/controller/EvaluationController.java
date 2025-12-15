@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.skala.crewvoice.domain.User;
 import org.skala.crewvoice.dto.request.CallbackRequest;
 import org.skala.crewvoice.dto.request.EvaluationCreateRequest;
 import org.skala.crewvoice.dto.request.EvaluationStartRequest;
@@ -15,6 +16,7 @@ import org.skala.crewvoice.dto.response.*;
 import org.skala.crewvoice.repository.UserRepository;
 import org.skala.crewvoice.service.EvaluationService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -129,10 +131,11 @@ public class EvaluationController {
             )
     })
     @GetMapping("/active")
-    public ResponseEntity<ApiResponse<ActiveEvaluationListResponse>> getActiveEvaluations() {
-        log.info("GET /api/v1/evaluations/active - 현재 진행 중인 평가 조회 요청");
+    public ResponseEntity<ApiResponse<ActiveEvaluationListResponse>> getActiveEvaluations(
+            @AuthenticationPrincipal User user) {
+        log.info("GET /api/v1/evaluations/active - 현재 진행 중인 평가 조회 요청 (userId: {})", user.getId());
 
-        ActiveEvaluationListResponse response = evaluationService.getActiveEvaluations();
+        ActiveEvaluationListResponse response = evaluationService.getActiveEvaluations(user);
 
         log.info("현재 진행 중인 평가 조회 성공 - 평가 수: {}", response.getEvaluations().size());
 

@@ -49,6 +49,10 @@ public class EvaluationResponse {
     @Schema(description = "평가 유형", example = "EXAM", allowableValues = {"EXAM", "MOCK"})
     private String evaluationType; // 시험 타입 추가
 
+    @JsonProperty("is_taken")
+    @Schema(description = "현재 사용자가 해당 평가를 응시했는지 여부", example = "false")
+    private Boolean isTaken;
+
     /**
      * Entity와 통계 정보로부터 Response DTO 생성
      */
@@ -61,6 +65,23 @@ public class EvaluationResponse {
                 .targetCount(targetCount)
                 .completedCount(completedCount)
                 .evaluationType(evaluation.getEvaluationType().name())  // 시험 타입 추가
+                .isTaken(false)  // 기본값
+                .build();
+    }
+
+    /**
+     * Entity, 통계 정보, 응시 여부로부터 Response DTO 생성
+     */
+    public static EvaluationResponse of(Evaluation evaluation, Integer targetCount, Integer completedCount, Boolean isTaken) {
+        return EvaluationResponse.builder()
+                .evaluationId(String.valueOf(evaluation.getEvaluationId()))
+                .evaluationName(evaluation.getEvaluationName())
+                .startDate(evaluation.getStartDate())
+                .endDate(evaluation.getEndDate())
+                .targetCount(targetCount)
+                .completedCount(completedCount)
+                .evaluationType(evaluation.getEvaluationType().name())
+                .isTaken(isTaken != null ? isTaken : false)
                 .build();
     }
 }

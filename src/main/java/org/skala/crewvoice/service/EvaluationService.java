@@ -128,10 +128,11 @@ public class EvaluationService {
      * 현재 진행 중인 평가 목록 조회 (피평가자용)
      * 현재 시간이 평가 기간 내(startDate ~ endDate)에 있는 평가만 조회합니다.
      *
-     * @return 진행 중인 평가 목록
+     * @param user 인증된 사용자
+     * @return 진행 중인 평가 목록 (사용자별 응시 여부 포함)
      */
-    public ActiveEvaluationListResponse getActiveEvaluations() {
-        log.info("현재 진행 중인 평가 목록 조회 시작 (피평가자용)");
+    public ActiveEvaluationListResponse getActiveEvaluations(User user) {
+        log.info("현재 진행 중인 평가 목록 조회 시작 (피평가자용) - userId: {}", user.getId());
 
         // 1. 현재 시간 기준으로 진행 중인 평가만 조회 (startDate <= now <= endDate)
         OffsetDateTime now = OffsetDateTime.now();
@@ -139,9 +140,16 @@ public class EvaluationService {
 
         log.info("진행 중인 평가 수: {}", activeEvaluations.size());
 
-        // 2. Response DTO 변환
+        // 2. Response DTO 변환 (사용자별 is_taken 포함)
         List<ActiveEvaluationResponse> responseList = activeEvaluations.stream()
-                .map(ActiveEvaluationResponse::from)
+                .map(evaluation -> {
+                    // 해당 사용자의 평가 응시 여부 조회
+                    Boolean isTaken = evaluationTargetUserRepository
+                            .findIsTakenByUserIdAndEvaluationId(user.getId(), evaluation.getEvaluationId())
+                            .orElse(false);  // 배정되지 않은 평가는 false
+
+                    return ActiveEvaluationResponse.from(evaluation, isTaken);
+                })
                 .toList();
 
         log.info("현재 진행 중인 평가 목록 조회 완료");

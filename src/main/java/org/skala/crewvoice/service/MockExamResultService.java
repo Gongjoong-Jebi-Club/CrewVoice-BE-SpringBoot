@@ -122,8 +122,9 @@ public class MockExamResultService {
                 .findByUserIdAndEvaluationId(user.getId(), evaluationId);
 
         if (submissions.isEmpty()) {
-            log.error("제출 기록을 찾을 수 없음 - userId: {}, evaluationId: {}", user.getId(), evaluationId);
-            throw new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND);
+            log.warn("제출 기록을 찾을 수 없음 - userId: {}, evaluationId: {} (기본값 반환)",
+                    user.getId(), evaluationId);
+            return Step2ResultResponse.empty(user.getId());
         }
 
         // 첫 번째 제출 기록 사용 (보통 1개만 존재)
@@ -137,26 +138,27 @@ public class MockExamResultService {
         log.info("평가 결과 조회 완료 - 조회된 개수: {}", evaluations.size());
 
         if (evaluations.size() != 2) {
-            log.error("평가 결과가 2개가 아님 - submissionId: {}, 조회된 개수: {}", submission.getSubmissionId(), evaluations.size());
-            throw new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND);
+            log.warn("평가 결과가 2개가 아님 - submissionId: {}, 조회된 개수: {} (기본값 반환)",
+                    submission.getSubmissionId(), evaluations.size());
+            return Step2ResultResponse.empty(user.getId());
         }
 
         // 3. 한국어와 영어 평가 구분
         EvaluationStep2 koreanEval = evaluations.stream()
                 .filter(e -> e.getLanguage() == org.skala.crewvoice.domain.Language.KOREAN)
                 .findFirst()
-                .orElseThrow(() -> {
-                    log.error("한국어 평가 결과를 찾을 수 없음 - submissionId: {}", submission.getSubmissionId());
-                    return new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND);
-                });
+                .orElse(null);
 
         EvaluationStep2 englishEval = evaluations.stream()
                 .filter(e -> e.getLanguage() == org.skala.crewvoice.domain.Language.ENGLISH)
                 .findFirst()
-                .orElseThrow(() -> {
-                    log.error("영어 평가 결과를 찾을 수 없음 - submissionId: {}", submission.getSubmissionId());
-                    return new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND);
-                });
+                .orElse(null);
+
+        if (koreanEval == null || englishEval == null) {
+            log.warn("한국어 또는 영어 평가 결과 누락 - submissionId: {} (기본값 반환)",
+                    submission.getSubmissionId());
+            return Step2ResultResponse.empty(user.getId());
+        }
 
         log.info("한국어/영어 평가 구분 완료");
 
@@ -180,8 +182,9 @@ public class MockExamResultService {
                 .findByUserIdAndEvaluationIdOrderByPartOrder(user.getId(), evaluationId);
 
         if (submissions.isEmpty()) {
-            log.error("제출 기록을 찾을 수 없음 - userId: {}, evaluationId: {}", user.getId(), evaluationId);
-            throw new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND);
+            log.warn("제출 기록을 찾을 수 없음 - userId: {}, evaluationId: {} (빈 리스트 반환)",
+                    user.getId(), evaluationId);
+            return Step3ResultResponse.empty(user.getId());
         }
 
         log.info("제출 기록 조회 성공 - 조회된 파트 개수: {}", submissions.size());
@@ -197,29 +200,27 @@ public class MockExamResultService {
             log.info("Part {} 평가 결과 조회 완료 - 조회된 개수: {}", submission.getPartOrder(), evaluations.size());
 
             if (evaluations.size() != 2) {
-                log.error("평가 결과가 2개가 아님 - submissionId: {}, partOrder: {}, 조회된 개수: {}",
+                log.warn("평가 결과가 2개가 아님 - submissionId: {}, partOrder: {}, 조회된 개수: {} (해당 파트 스킵)",
                         submission.getSubmissionId(), submission.getPartOrder(), evaluations.size());
-                throw new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND);
+                continue; // 이 파트는 건너뛰고 다음 파트 처리
             }
 
             // 한국어와 영어 평가 구분
             EvaluationStep3 koreanEval = evaluations.stream()
                     .filter(e -> e.getLanguage() == Language.KOREAN)
                     .findFirst()
-                    .orElseThrow(() -> {
-                        log.error("한국어 평가 결과를 찾을 수 없음 - submissionId: {}, partOrder: {}",
-                                submission.getSubmissionId(), submission.getPartOrder());
-                        return new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND);
-                    });
+                    .orElse(null);
 
             EvaluationStep3 englishEval = evaluations.stream()
                     .filter(e -> e.getLanguage() == Language.ENGLISH)
                     .findFirst()
-                    .orElseThrow(() -> {
-                        log.error("영어 평가 결과를 찾을 수 없음 - submissionId: {}, partOrder: {}",
-                                submission.getSubmissionId(), submission.getPartOrder());
-                        return new EntityNotFoundException(ErrorCode.EVALUATION_NOT_FOUND);
-                    });
+                    .orElse(null);
+
+            if (koreanEval == null || englishEval == null) {
+                log.warn("한국어 또는 영어 평가 결과 누락 - submissionId: {}, partOrder: {} (해당 파트 스킵)",
+                        submission.getSubmissionId(), submission.getPartOrder());
+                continue; // 이 파트는 건너뛰고 다음 파트 처리
+            }
 
             // Part 결과 생성 및 리스트에 추가
             Step3PartResultResponse partResult = Step3PartResultResponse.fromEvaluations(

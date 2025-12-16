@@ -47,4 +47,17 @@ public class Step3LanguageResultResponse {
                 evaluation.getFeedbackSummary()
         );
     }
+
+    /**
+     * 기본값(0점)으로 Step3LanguageResultResponse 생성
+     * 평가 결과가 없을 때 사용
+     *
+     * @return 모든 점수가 0인 Step3LanguageResultResponse
+     */
+    public static Step3LanguageResultResponse empty() {
+        return new Step3LanguageResultResponse(
+                "0", "0", "0", "0", "0", "0", "0",
+                "아직 평가가 완료되지 않았습니다."
+        );
+    }
 }

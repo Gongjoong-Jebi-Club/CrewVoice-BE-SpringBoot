@@ -47,4 +47,17 @@ public class Step2LanguageResultResponse {
                 evaluation.getFeedbackSummary()
         );
     }
+
+    /**
+     * 기본값(0점)으로 Step2LanguageResultResponse 생성
+     * 평가 결과가 없을 때 사용
+     *
+     * @return 모든 점수가 0인 Step2LanguageResultResponse
+     */
+    public static Step2LanguageResultResponse empty() {
+        return new Step2LanguageResultResponse(
+                "0", "0", "0", "0", "0", "0", "0",
+                "아직 평가가 완료되지 않았습니다."
+        );
+    }
 }

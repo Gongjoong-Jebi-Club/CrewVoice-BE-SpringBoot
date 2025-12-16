@@ -33,4 +33,18 @@ public class Step2ResultResponse {
 
         return new Step2ResultResponse(userId, koreanResult, englishResult);
     }
+
+    /**
+     * 기본값(0점)으로 Step2ResultResponse 생성
+     * 평가 결과가 없을 때 사용
+     *
+     * @param userId 사용자 ID
+     * @return 모든 점수가 0인 Step2ResultResponse
+     */
+    public static Step2ResultResponse empty(Long userId) {
+        Step2LanguageResultResponse koreanResult = Step2LanguageResultResponse.empty();
+        Step2LanguageResultResponse englishResult = Step2LanguageResultResponse.empty();
+
+        return new Step2ResultResponse(userId, koreanResult, englishResult);
+    }
 }

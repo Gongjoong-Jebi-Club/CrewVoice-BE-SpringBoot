@@ -48,11 +48,8 @@ public class FinalGradeService {
         }
 
         // Step1 정답 개수 조회
-        long correctCount = submissionStep1Repository.findAll().stream()
-                .filter(s -> s.getUser().getId().equals(userId)
-                        && s.getEvaluation().getEvaluationId().equals(evaluation.getEvaluationId())
-                        && s.getIsCorrect())
-                .count();
+        long correctCount = submissionStep1Repository.countCorrectByUserIdAndEvaluationId(
+                userId, evaluation.getEvaluationId());
 
         // Step1 점수 계산 (정답 개수 × 5)
         BigDecimal step1Score = BigDecimal.valueOf(correctCount * 5);
@@ -189,17 +186,47 @@ public class FinalGradeService {
             BigDecimal scoreSpeed,
             BigDecimal scoreAccent
     ) {
+        // FastAPI가 반환한 점수 로깅
+        log.info("========== FastAPI 점수 상세 ==========");
+        log.info("발음(Pronunciation): {} (가중치: {})", scorePronunciation, evaluation.getWeightPronunciation());
+        log.info("쉼(Pause): {} (가중치: {})", scorePause, evaluation.getWeightPause());
+        log.info("억양(Intonation): {} (가중치: {})", scoreIntonation, evaluation.getWeightIntonation());
+        log.info("톤(Tone): {} (가중치: {})", scoreTone, evaluation.getWeightTone());
+        log.info("속도(Speed): {} (가중치: {})", scoreSpeed, evaluation.getWeightSpeed());
+        log.info("강세(Accent): {} (가중치: {})", scoreAccent, evaluation.getWeightAccent());
+
         BigDecimal weightedSum = BigDecimal.ZERO;
 
-        // 각 항목 점수 × 가중치 / 100
-        weightedSum = weightedSum.add(scorePronunciation.multiply(evaluation.getWeightPronunciation()));
-        weightedSum = weightedSum.add(scorePause.multiply(evaluation.getWeightPause()));
-        weightedSum = weightedSum.add(scoreIntonation.multiply(evaluation.getWeightIntonation()));
-        weightedSum = weightedSum.add(scoreTone.multiply(evaluation.getWeightTone()));
-        weightedSum = weightedSum.add(scoreSpeed.multiply(evaluation.getWeightSpeed()));
-        weightedSum = weightedSum.add(scoreAccent.multiply(evaluation.getWeightAccent()));
+        // 각 항목 점수 × 가중치 계산 및 로깅
+        BigDecimal weightedPronunciation = scorePronunciation.multiply(evaluation.getWeightPronunciation());
+        BigDecimal weightedPause = scorePause.multiply(evaluation.getWeightPause());
+        BigDecimal weightedIntonation = scoreIntonation.multiply(evaluation.getWeightIntonation());
+        BigDecimal weightedTone = scoreTone.multiply(evaluation.getWeightTone());
+        BigDecimal weightedSpeed = scoreSpeed.multiply(evaluation.getWeightSpeed());
+        BigDecimal weightedAccent = scoreAccent.multiply(evaluation.getWeightAccent());
+
+        log.info("========== 가중 점수 계산 ==========");
+        log.info("발음 가중 점수: {} × {} = {}", scorePronunciation, evaluation.getWeightPronunciation(), weightedPronunciation);
+        log.info("쉼 가중 점수: {} × {} = {}", scorePause, evaluation.getWeightPause(), weightedPause);
+        log.info("억양 가중 점수: {} × {} = {}", scoreIntonation, evaluation.getWeightIntonation(), weightedIntonation);
+        log.info("톤 가중 점수: {} × {} = {}", scoreTone, evaluation.getWeightTone(), weightedTone);
+        log.info("속도 가중 점수: {} × {} = {}", scoreSpeed, evaluation.getWeightSpeed(), weightedSpeed);
+        log.info("강세 가중 점수: {} × {} = {}", scoreAccent, evaluation.getWeightAccent(), weightedAccent);
+
+        weightedSum = weightedSum.add(weightedPronunciation);
+        weightedSum = weightedSum.add(weightedPause);
+        weightedSum = weightedSum.add(weightedIntonation);
+        weightedSum = weightedSum.add(weightedTone);
+        weightedSum = weightedSum.add(weightedSpeed);
+        weightedSum = weightedSum.add(weightedAccent);
+
+        log.info("가중 점수 합계: {}", weightedSum);
 
         // 가중치 합계가 100이므로 100으로 나눔
-        return weightedSum.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        BigDecimal finalScore = weightedSum.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        log.info("최종 가중 평균 점수: {} ÷ 100 = {}", weightedSum, finalScore);
+        log.info("=====================================");
+
+        return finalScore;
     }
 }

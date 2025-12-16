@@ -169,6 +169,15 @@ public class MockExamResultService {
         EvaluationStep2 koreanEval = koreanEvaluations.get(0);
         EvaluationStep2 englishEval = englishEvaluations.get(0);
 
+        // 점수가 null인지 확인 (평가가 완료되지 않은 경우)
+        if (koreanEval.getOverallScore() == null || englishEval.getOverallScore() == null) {
+            log.warn("평가가 아직 완료되지 않음 - userId: {}, evaluationId: {}, " +
+                    "koreanStatus: {}, englishStatus: {} (기본값 반환)",
+                    user.getId(), evaluationId,
+                    koreanEval.getStatus(), englishEval.getStatus());
+            return Step2ResultResponse.empty(user.getId());
+        }
+
         log.info("한국어/영어 평가 구분 완료");
 
         // 4. 응답 생성
@@ -248,6 +257,13 @@ public class MockExamResultService {
             // 첫 번째 평가 결과 사용 (보통 각 submission당 1개의 evaluation만 존재)
             EvaluationStep3 koreanEval = koreanEvaluations.get(0);
             EvaluationStep3 englishEval = englishEvaluations.get(0);
+
+            // 점수가 null인지 확인 (평가가 완료되지 않은 경우)
+            if (koreanEval.getOverallScore() == null || englishEval.getOverallScore() == null) {
+                log.warn("Part {} 평가가 아직 완료되지 않음 - koreanStatus: {}, englishStatus: {} (해당 파트 스킵)",
+                        partOrder, koreanEval.getStatus(), englishEval.getStatus());
+                continue;
+            }
 
             // Part 결과 생성 및 리스트에 추가
             Step3PartResultResponse partResult = Step3PartResultResponse.fromEvaluations(

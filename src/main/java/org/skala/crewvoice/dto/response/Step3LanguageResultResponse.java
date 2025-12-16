@@ -37,14 +37,14 @@ public class Step3LanguageResultResponse {
      */
     public static Step3LanguageResultResponse from(EvaluationStep3 evaluation) {
         return new Step3LanguageResultResponse(
-                evaluation.getScorePronunciation().toString(),
-                evaluation.getScorePause().toString(),
-                evaluation.getScoreIntonation().toString(),
-                evaluation.getScoreTone().toString(),
-                evaluation.getScoreSpeed().toString(),
-                evaluation.getScoreAccent().toString(),
-                evaluation.getOverallScore().toString(),
-                evaluation.getFeedbackSummary()
+                evaluation.getScorePronunciation() != null ? evaluation.getScorePronunciation().toString() : "0",
+                evaluation.getScorePause() != null ? evaluation.getScorePause().toString() : "0",
+                evaluation.getScoreIntonation() != null ? evaluation.getScoreIntonation().toString() : "0",
+                evaluation.getScoreTone() != null ? evaluation.getScoreTone().toString() : "0",
+                evaluation.getScoreSpeed() != null ? evaluation.getScoreSpeed().toString() : "0",
+                evaluation.getScoreAccent() != null ? evaluation.getScoreAccent().toString() : "0",
+                evaluation.getOverallScore() != null ? evaluation.getOverallScore().toString() : "0",
+                evaluation.getFeedbackSummary() != null ? evaluation.getFeedbackSummary() : "아직 평가가 완료되지 않았습니다."
         );
     }
 

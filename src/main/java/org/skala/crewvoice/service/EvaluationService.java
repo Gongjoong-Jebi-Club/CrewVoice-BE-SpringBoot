@@ -73,11 +73,25 @@ public class EvaluationService {
                 .weightPause(BigDecimal.valueOf(request.getWeightPause()))
                 .weightTone(BigDecimal.valueOf(request.getWeightTone()))
                 .weightSpeed(BigDecimal.valueOf(request.getWeightSpeed()))
+                // FastAPI 파라미터
+                .weightClarity(request.getWeightClarity())
+                .weightStability(request.getWeightStability())
+                .weightBrightness(request.getWeightBrightness())
+                .weightPitchPosition(request.getWeightPitchPosition())
+                .weightFluency(request.getWeightFluency())
+                .weightPosition(request.getWeightPosition())
+                .weightLength(request.getWeightLength())
+                .weightPitch(request.getWeightPitch())
+                .weightEnergy(request.getWeightEnergy())
+                .weightBaseline(request.getWeightBaseline())
+                .weightIso(request.getWeightIso())
+                .deviationThreshold(request.getDeviationThreshold())
                 .build();
 
         // 2. Entity 레벨 검증 (불변 조건)
         evaluation.validateWeights();
         evaluation.validateDateRange();
+        evaluation.validateAllFastAPIWeights();
 
         // 3. 저장
         Evaluation savedEvaluation = evaluationRepository.save(evaluation);
@@ -128,10 +142,11 @@ public class EvaluationService {
      * 현재 진행 중인 평가 목록 조회 (피평가자용)
      * 현재 시간이 평가 기간 내(startDate ~ endDate)에 있는 평가만 조회합니다.
      *
-     * @return 진행 중인 평가 목록
+     * @param user 인증된 사용자
+     * @return 진행 중인 평가 목록 (사용자별 응시 여부 포함)
      */
-    public ActiveEvaluationListResponse getActiveEvaluations() {
-        log.info("현재 진행 중인 평가 목록 조회 시작 (피평가자용)");
+    public ActiveEvaluationListResponse getActiveEvaluations(User user) {
+        log.info("현재 진행 중인 평가 목록 조회 시작 (피평가자용) - userId: {}", user.getId());
 
         // 1. 현재 시간 기준으로 진행 중인 평가만 조회 (startDate <= now <= endDate)
         OffsetDateTime now = OffsetDateTime.now();
@@ -139,9 +154,16 @@ public class EvaluationService {
 
         log.info("진행 중인 평가 수: {}", activeEvaluations.size());
 
-        // 2. Response DTO 변환
+        // 2. Response DTO 변환 (사용자별 is_taken 포함)
         List<ActiveEvaluationResponse> responseList = activeEvaluations.stream()
-                .map(ActiveEvaluationResponse::from)
+                .map(evaluation -> {
+                    // 해당 사용자의 평가 응시 여부 조회
+                    Boolean isTaken = evaluationTargetUserRepository
+                            .findIsTakenByUserIdAndEvaluationId(user.getId(), evaluation.getEvaluationId())
+                            .orElse(false);  // 배정되지 않은 평가는 false
+
+                    return ActiveEvaluationResponse.from(evaluation, isTaken);
+                })
                 .toList();
 
         log.info("현재 진행 중인 평가 목록 조회 완료");
@@ -208,6 +230,9 @@ public class EvaluationService {
         QuestionStep2 question = submission.getQuestion();
         Language language = submission.getLanguage();
 
+        // Evaluation 엔티티 조회 (가중치 정보 필요)
+        Evaluation evaluationEntity = submission.getEvaluation();
+
         // STEP 3: S3 Pre-signed URL 생성 (트랜잭션 외부 - 외부 API 호출)
         String presignedUrl = s3Service.generatePresignedUrl(
                 submission.getAudioFileUrl(),
@@ -224,7 +249,7 @@ public class EvaluationService {
                 language.getCode(), script.length());
 
         // STEP 5: FastAPI 요청 (트랜잭션 외부 - 외부 API 호출)
-        sendEvaluationRequest(taskId, presignedUrl, script, language.getCode(), evaluation);
+        sendEvaluationRequest(taskId, presignedUrl, script, language.getCode(), evaluationEntity, evaluation);
 
         log.info("Step2 평가 시작 완료 (비동기) - submissionId: {}, taskId: {}", submissionId, taskId);
     }
@@ -269,9 +294,30 @@ public class EvaluationService {
      * FastAPI 평가 요청 전송 (트랜잭션 외부)
      */
     private void sendEvaluationRequest(String taskId, String audioUrl, String script,
-                                       String languageCode, EvaluationStep2 evaluation) {
-        sendFastAPIRequest(taskId, audioUrl, script, languageCode,
+                                       String languageCode, Evaluation evaluationEntity, EvaluationStep2 evaluation) {
+        sendFastAPIRequest(taskId, audioUrl, script, languageCode, evaluationEntity,
                 () -> markEvaluationStep2AsFailed(evaluation.getId(), "FastAPI 요청 실패"));
+    }
+
+    /**
+     * Evaluation 엔티티로부터 FastAPI 가중치 DTO 생성
+     */
+    private FastAPIEvaluationRequest.WeightsDTO buildFastAPIWeights(Evaluation evaluation) {
+        return FastAPIEvaluationRequest.WeightsDTO.builder()
+                .weightClarity(evaluation.getWeightClarity().doubleValue())
+                .weightStability(evaluation.getWeightStability().doubleValue())
+                .weightBrightness(evaluation.getWeightBrightness().doubleValue())
+                .weightPitchPosition(evaluation.getWeightPitchPosition().doubleValue())
+                .weightFluency(evaluation.getWeightFluency().doubleValue())
+                .weightPosition(evaluation.getWeightPosition().doubleValue())
+                .weightLength(evaluation.getWeightLength().doubleValue())
+                .weightPitch(evaluation.getWeightPitch().doubleValue())
+                .weightEnergy(evaluation.getWeightEnergy().doubleValue())
+                .weightBaseline(evaluation.getWeightBaseline().doubleValue())
+                .weightIso(evaluation.getWeightIso().doubleValue())
+                .deviationThreshold(evaluation.getDeviationThreshold().doubleValue())
+                .gender("F")
+                .build();
     }
 
     /**
@@ -279,16 +325,20 @@ public class EvaluationService {
      * Step2와 Step3에서 공통으로 사용
      */
     private void sendFastAPIRequest(String taskId, String audioUrl, String script,
-                                     String languageCode, Runnable onFailure) {
+                                     String languageCode, Evaluation evaluation, Runnable onFailure) {
+        // FastAPI 가중치 DTO 생성
+        FastAPIEvaluationRequest.WeightsDTO weights = buildFastAPIWeights(evaluation);
+
         FastAPIEvaluationRequest fastapiRequest = FastAPIEvaluationRequest.builder()
                 .taskId(taskId)
                 .audioUrl(audioUrl)
                 .script(script)
                 .language(languageCode)
                 .callbackUrl(fastapiCallbackUrl)
+                .weights(weights)
                 .build();
 
-        log.info("FastAPI 요청 DTO 생성 완료 - taskId: {}, callbackUrl: {}", taskId, fastapiCallbackUrl);
+        log.info("FastAPI 요청 DTO 생성 완료 - taskId: {}, callbackUrl: {}, gender: F", taskId, fastapiCallbackUrl);
 
         // WebClient로 FastAPI 비동기 호출 (Fire-and-Forget)
         fastapiWebClient.post()
@@ -346,6 +396,9 @@ public class EvaluationService {
         QuestionStep3 question = submission.getQuestion();
         Language language = submission.getLanguage();
 
+        // Evaluation 엔티티 조회 (가중치 정보 필요)
+        Evaluation evaluationEntity = submission.getEvaluation();
+
         // STEP 3: S3 Pre-signed URL 생성 (트랜잭션 외부 - 외부 API 호출)
         String presignedUrl = s3Service.generatePresignedUrl(
                 submission.getAudioFileUrl(),
@@ -362,7 +415,7 @@ public class EvaluationService {
                 language.getCode(), script.length());
 
         // STEP 5: FastAPI 요청 (트랜잭션 외부 - 외부 API 호출)
-        sendEvaluationRequestForStep3(taskId, presignedUrl, script, language.getCode(), evaluation);
+        sendEvaluationRequestForStep3(taskId, presignedUrl, script, language.getCode(), evaluationEntity, evaluation);
 
         log.info("Step3 평가 시작 완료 (비동기) - submissionId: {}, taskId: {}", submissionId, taskId);
     }
@@ -407,8 +460,8 @@ public class EvaluationService {
      * FastAPI 평가 요청 전송 - Step3용 (트랜잭션 외부)
      */
     private void sendEvaluationRequestForStep3(String taskId, String audioUrl, String script,
-                                               String languageCode, EvaluationStep3 evaluation) {
-        sendFastAPIRequest(taskId, audioUrl, script, languageCode,
+                                               String languageCode, Evaluation evaluationEntity, EvaluationStep3 evaluation) {
+        sendFastAPIRequest(taskId, audioUrl, script, languageCode, evaluationEntity,
                 () -> markEvaluationStep3AsFailed(evaluation.getId(), "FastAPI 요청 실패"));
     }
 

@@ -35,6 +35,7 @@ public interface SubmissionStep2Repository extends JpaRepository<SubmissionStep2
      */
     @Query("SELECT s FROM SubmissionStep2 s " +
             "JOIN FETCH s.question q " +
+            "JOIN FETCH s.evaluation e " +
             "WHERE s.submissionId = :submissionId")
     Optional<SubmissionStep2> findByIdWithQuestion(@Param("submissionId") Long submissionId);
 

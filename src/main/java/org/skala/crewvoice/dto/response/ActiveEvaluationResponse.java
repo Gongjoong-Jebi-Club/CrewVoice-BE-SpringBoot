@@ -36,6 +36,9 @@ public class ActiveEvaluationResponse {
     @JsonProperty("evaluation_type")
     private String evaluationType;
 
+    @JsonProperty("is_taken")
+    private Boolean isTaken;
+
     /**
      * Evaluation Entity로부터 ActiveEvaluationResponse 생성
      */
@@ -46,6 +49,21 @@ public class ActiveEvaluationResponse {
                 .startDate(evaluation.getStartDate())
                 .endDate(evaluation.getEndDate())
                 .evaluationType(evaluation.getEvaluationType().name())  // Enum → String 변환
+                .isTaken(false)  // 기본값
+                .build();
+    }
+
+    /**
+     * Evaluation Entity와 응시 여부로부터 ActiveEvaluationResponse 생성
+     */
+    public static ActiveEvaluationResponse from(Evaluation evaluation, Boolean isTaken) {
+        return ActiveEvaluationResponse.builder()
+                .evaluationId(evaluation.getEvaluationId())
+                .evaluationName(evaluation.getEvaluationName())
+                .startDate(evaluation.getStartDate())
+                .endDate(evaluation.getEndDate())
+                .evaluationType(evaluation.getEvaluationType().name())
+                .isTaken(isTaken != null ? isTaken : false)
                 .build();
     }
 }

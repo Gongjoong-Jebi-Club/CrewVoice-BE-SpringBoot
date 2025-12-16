@@ -23,6 +23,7 @@ public class EvaluationCallbackService {
 
     private final EvaluationStep2Repository evaluationStep2Repository;
     private final EvaluationStep3Repository evaluationStep3Repository;
+    private final FinalGradeService finalGradeService;
 
     /**
      * FastAPI 평가 완료 콜백 처리 (5번 API)
@@ -86,6 +87,15 @@ public class EvaluationCallbackService {
 
                 log.info("Step2 평가 점수 업데이트 완료 - taskId: {}, overallScore: {}",
                         request.getTaskId(), scores.getOverallScore());
+
+                // FinalGrade 업데이트
+                try {
+                    finalGradeService.updateStep2Score(evaluation);
+                    log.info("FinalGrade Step2 점수 업데이트 완료 - taskId: {}", request.getTaskId());
+                } catch (Exception e) {
+                    log.error("FinalGrade Step2 점수 업데이트 실패 - taskId: {}, error: {}",
+                            request.getTaskId(), e.getMessage(), e);
+                }
             }
 
         } else if ("failed".equalsIgnoreCase(request.getStatus())) {
@@ -136,6 +146,16 @@ public class EvaluationCallbackService {
 
                 log.info("Step3 평가 점수 업데이트 완료 - taskId: {}, language: {}, overallScore: {}",
                         request.getTaskId(), evaluation.getLanguage().getCode(), scores.getOverallScore());
+
+                // FinalGrade 업데이트
+                try {
+                    finalGradeService.updateStep3Score(evaluation);
+                    log.info("FinalGrade Step3 점수 업데이트 완료 - taskId: {}, language: {}",
+                            request.getTaskId(), evaluation.getLanguage().getCode());
+                } catch (Exception e) {
+                    log.error("FinalGrade Step3 점수 업데이트 실패 - taskId: {}, language: {}, error: {}",
+                            request.getTaskId(), evaluation.getLanguage().getCode(), e.getMessage(), e);
+                }
             }
 
         } else if ("failed".equalsIgnoreCase(request.getStatus())) {

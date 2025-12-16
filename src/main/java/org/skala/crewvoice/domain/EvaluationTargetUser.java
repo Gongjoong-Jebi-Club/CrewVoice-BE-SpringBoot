@@ -37,10 +37,25 @@ public class EvaluationTargetUser {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    /**
+     * 사용자가 해당 평가를 응시했는지 여부
+     * false: 미응시, true: 응시 완료
+     */
+    @Column(name = "is_taken", nullable = false)
+    private Boolean isTaken = false;
+
     @Builder
     public EvaluationTargetUser(Evaluation evaluation, User user) {
         this.evaluation = evaluation;
         this.user = user;
         this.createdAt = LocalDateTime.now();
+        this.isTaken = false;  // 배정 시점에는 미응시 상태
+    }
+
+    /**
+     * 사용자가 평가를 응시했음을 표시
+     */
+    public void markAsTaken() {
+        this.isTaken = true;
     }
 }

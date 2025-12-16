@@ -8,9 +8,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.skala.crewvoice.domain.EvaluationType;
 import org.skala.crewvoice.validation.ValidDateRange;
+import org.skala.crewvoice.validation.ValidFastAPIWeights;
 import org.skala.crewvoice.validation.ValidWeightSum;
 
 import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 /**
@@ -22,6 +24,7 @@ import java.time.OffsetDateTime;
 @Schema(description = "평가 생성 요청")
 @ValidWeightSum
 @ValidDateRange
+@ValidFastAPIWeights
 public class EvaluationCreateRequest {
 
     @NotBlank(message = "평가 이름은 필수입니다")
@@ -85,4 +88,107 @@ public class EvaluationCreateRequest {
     @JsonProperty("weight_speed")
     @Schema(description = "속도 평가 가중치", example = "10", required = true)
     private Integer weightSpeed;
+
+    // ===== FastAPI 파라미터 가중치 =====
+
+    // Tone (4개)
+    @NotNull(message = "Clarity 가중치는 필수입니다")
+    @DecimalMin(value = "0.0", message = "Clarity 가중치는 0.0 이상이어야 합니다")
+    @DecimalMax(value = "1.0", message = "Clarity 가중치는 1.0 이하여야 합니다")
+    @Digits(integer = 1, fraction = 3)
+    @JsonProperty("weight_clarity")
+    @Schema(description = "Tone - Clarity 가중치 (0.0~1.0, 0.05 단위)", example = "0.250", required = true)
+    private BigDecimal weightClarity;
+
+    @NotNull(message = "Stability 가중치는 필수입니다")
+    @DecimalMin(value = "0.0")
+    @DecimalMax(value = "1.0")
+    @Digits(integer = 1, fraction = 3)
+    @JsonProperty("weight_stability")
+    @Schema(description = "Tone - Stability 가중치 (0.0~1.0, 0.05 단위)", example = "0.250", required = true)
+    private BigDecimal weightStability;
+
+    @NotNull(message = "Brightness 가중치는 필수입니다")
+    @DecimalMin(value = "0.0")
+    @DecimalMax(value = "1.0")
+    @Digits(integer = 1, fraction = 3)
+    @JsonProperty("weight_brightness")
+    @Schema(description = "Tone - Brightness 가중치 (0.0~1.0, 0.05 단위)", example = "0.250", required = true)
+    private BigDecimal weightBrightness;
+
+    @NotNull(message = "Pitch Position 가중치는 필수입니다")
+    @DecimalMin(value = "0.0")
+    @DecimalMax(value = "1.0")
+    @Digits(integer = 1, fraction = 3)
+    @JsonProperty("weight_pitch_position")
+    @Schema(description = "Tone - Pitch Position 가중치 (0.0~1.0, 0.05 단위)", example = "0.250", required = true)
+    private BigDecimal weightPitchPosition;
+
+    // Pause (3개)
+    @NotNull(message = "Fluency 가중치는 필수입니다")
+    @DecimalMin(value = "0.0")
+    @DecimalMax(value = "1.0")
+    @Digits(integer = 1, fraction = 3)
+    @JsonProperty("weight_fluency")
+    @Schema(description = "Pause - Fluency 가중치 (0.0~1.0, 0.05 단위)", example = "0.350", required = true)
+    private BigDecimal weightFluency;
+
+    @NotNull(message = "Position 가중치는 필수입니다")
+    @DecimalMin(value = "0.0")
+    @DecimalMax(value = "1.0")
+    @Digits(integer = 1, fraction = 3)
+    @JsonProperty("weight_position")
+    @Schema(description = "Pause - Position 가중치 (0.0~1.0, 0.05 단위)", example = "0.350", required = true)
+    private BigDecimal weightPosition;
+
+    @NotNull(message = "Length 가중치는 필수입니다")
+    @DecimalMin(value = "0.0")
+    @DecimalMax(value = "1.0")
+    @Digits(integer = 1, fraction = 3)
+    @JsonProperty("weight_length")
+    @Schema(description = "Pause - Length 가중치 (0.0~1.0, 0.05 단위)", example = "0.300", required = true)
+    private BigDecimal weightLength;
+
+    // Accent (2개)
+    @NotNull(message = "Pitch 가중치는 필수입니다")
+    @DecimalMin(value = "0.0")
+    @DecimalMax(value = "1.0")
+    @Digits(integer = 1, fraction = 3)
+    @JsonProperty("weight_pitch")
+    @Schema(description = "Accent - Pitch 가중치 (0.0~1.0, 0.05 단위)", example = "0.500", required = true)
+    private BigDecimal weightPitch;
+
+    @NotNull(message = "Energy 가중치는 필수입니다")
+    @DecimalMin(value = "0.0")
+    @DecimalMax(value = "1.0")
+    @Digits(integer = 1, fraction = 3)
+    @JsonProperty("weight_energy")
+    @Schema(description = "Accent - Energy 가중치 (0.0~1.0, 0.05 단위)", example = "0.500", required = true)
+    private BigDecimal weightEnergy;
+
+    // Intonation (2개)
+    @NotNull(message = "Baseline 가중치는 필수입니다")
+    @DecimalMin(value = "0.0")
+    @DecimalMax(value = "1.0")
+    @Digits(integer = 1, fraction = 3)
+    @JsonProperty("weight_baseline")
+    @Schema(description = "Intonation - Baseline 가중치 (0.0~1.0, 0.05 단위)", example = "0.500", required = true)
+    private BigDecimal weightBaseline;
+
+    @NotNull(message = "Iso 가중치는 필수입니다")
+    @DecimalMin(value = "0.0")
+    @DecimalMax(value = "1.0")
+    @Digits(integer = 1, fraction = 3)
+    @JsonProperty("weight_iso")
+    @Schema(description = "Intonation - Iso 가중치 (0.0~1.0, 0.05 단위)", example = "0.500", required = true)
+    private BigDecimal weightIso;
+
+    // Speed (1개)
+    @NotNull(message = "Deviation Threshold는 필수입니다")
+    @DecimalMin(value = "5.0")
+    @DecimalMax(value = "10.0")
+    @Digits(integer = 2, fraction = 1)
+    @JsonProperty("deviation_threshold")
+    @Schema(description = "Speed - Deviation Threshold (5.0~10.0, 0.5 단위)", example = "7.5", required = true)
+    private BigDecimal deviationThreshold;
 }

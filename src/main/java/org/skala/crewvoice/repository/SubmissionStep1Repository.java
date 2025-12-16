@@ -26,4 +26,32 @@ public interface SubmissionStep1Repository extends JpaRepository<SubmissionStep1
             @Param("userId") Long userId,
             @Param("evaluationId") Long evaluationId
     );
+
+    /**
+     * 특정 사용자와 평가 ID로 Step1 제출 개수 조회
+     *
+     * @param userId 사용자 ID
+     * @param evaluationId 평가 ID
+     * @return Step1 제출 개수
+     */
+    @Query("SELECT COUNT(s) FROM SubmissionStep1 s " +
+            "WHERE s.user.id = :userId AND s.evaluation.evaluationId = :evaluationId")
+    long countByUserIdAndEvaluationId(
+            @Param("userId") Long userId,
+            @Param("evaluationId") Long evaluationId
+    );
+
+    /**
+     * 특정 사용자와 평가 ID로 Step1 정답 개수 조회
+     *
+     * @param userId 사용자 ID
+     * @param evaluationId 평가 ID
+     * @return Step1 정답 개수
+     */
+    @Query("SELECT COUNT(s) FROM SubmissionStep1 s " +
+            "WHERE s.user.id = :userId AND s.evaluation.evaluationId = :evaluationId AND s.isCorrect = true")
+    long countCorrectByUserIdAndEvaluationId(
+            @Param("userId") Long userId,
+            @Param("evaluationId") Long evaluationId
+    );
 }

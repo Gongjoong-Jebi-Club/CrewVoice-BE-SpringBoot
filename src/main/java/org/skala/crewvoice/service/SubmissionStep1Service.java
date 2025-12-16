@@ -72,10 +72,8 @@ public class SubmissionStep1Service {
      * 20개 문제를 모두 제출했는지 확인 후 FinalGrade 생성
      */
     private void checkAndCreateFinalGrade(User user, Evaluation evaluation) {
-        long submissionCount = submissionStep1Repository.findAll().stream()
-                .filter(s -> s.getUser().getId().equals(user.getId())
-                        && s.getEvaluation().getEvaluationId().equals(evaluation.getEvaluationId()))
-                .count();
+        long submissionCount = submissionStep1Repository.countByUserIdAndEvaluationId(
+                user.getId(), evaluation.getEvaluationId());
 
         log.info("STEP1 제출 개수 확인 - userId: {}, evaluationId: {}, count: {}",
                 user.getId(), evaluation.getEvaluationId(), submissionCount);

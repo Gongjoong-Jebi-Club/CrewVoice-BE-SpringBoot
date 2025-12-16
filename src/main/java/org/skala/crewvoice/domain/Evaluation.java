@@ -63,6 +63,48 @@ public class Evaluation extends BaseTimeEntity {
     @Column(name = "weight_accent", nullable = false, precision = 5, scale = 2)
     private BigDecimal weightAccent;
 
+    // ===== FastAPI 파라미터 가중치 =====
+    // Tone (4개)
+    @Column(name = "weight_clarity", nullable = false, precision = 4, scale = 3)
+    private BigDecimal weightClarity;
+
+    @Column(name = "weight_stability", nullable = false, precision = 4, scale = 3)
+    private BigDecimal weightStability;
+
+    @Column(name = "weight_brightness", nullable = false, precision = 4, scale = 3)
+    private BigDecimal weightBrightness;
+
+    @Column(name = "weight_pitch_position", nullable = false, precision = 4, scale = 3)
+    private BigDecimal weightPitchPosition;
+
+    // Pause (3개)
+    @Column(name = "weight_fluency", nullable = false, precision = 4, scale = 3)
+    private BigDecimal weightFluency;
+
+    @Column(name = "weight_position", nullable = false, precision = 4, scale = 3)
+    private BigDecimal weightPosition;
+
+    @Column(name = "weight_length", nullable = false, precision = 4, scale = 3)
+    private BigDecimal weightLength;
+
+    // Accent (2개)
+    @Column(name = "weight_pitch", nullable = false, precision = 4, scale = 3)
+    private BigDecimal weightPitch;
+
+    @Column(name = "weight_energy", nullable = false, precision = 4, scale = 3)
+    private BigDecimal weightEnergy;
+
+    // Intonation (2개)
+    @Column(name = "weight_baseline", nullable = false, precision = 4, scale = 3)
+    private BigDecimal weightBaseline;
+
+    @Column(name = "weight_iso", nullable = false, precision = 4, scale = 3)
+    private BigDecimal weightIso;
+
+    // Speed (1개)
+    @Column(name = "deviation_threshold", nullable = false, precision = 3, scale = 1)
+    private BigDecimal deviationThreshold;
+
     @OneToMany(mappedBy = "evaluation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EvaluationTargetUser> targetUsers = new ArrayList<>();
 
@@ -70,7 +112,12 @@ public class Evaluation extends BaseTimeEntity {
     public Evaluation(String evaluationName, EvaluationType evaluationType, OffsetDateTime startDate,
                       OffsetDateTime endDate, BigDecimal weightPronunciation, BigDecimal weightPause,
                       BigDecimal weightIntonation, BigDecimal weightTone, BigDecimal weightSpeed,
-                      BigDecimal weightAccent) {
+                      BigDecimal weightAccent,
+                      // FastAPI 파라미터
+                      BigDecimal weightClarity, BigDecimal weightStability, BigDecimal weightBrightness,
+                      BigDecimal weightPitchPosition, BigDecimal weightFluency, BigDecimal weightPosition,
+                      BigDecimal weightLength, BigDecimal weightPitch, BigDecimal weightEnergy,
+                      BigDecimal weightBaseline, BigDecimal weightIso, BigDecimal deviationThreshold) {
         this.evaluationName = evaluationName;
         this.evaluationType = evaluationType;
         this.startDate = startDate;
@@ -81,6 +128,18 @@ public class Evaluation extends BaseTimeEntity {
         this.weightTone = weightTone;
         this.weightSpeed = weightSpeed;
         this.weightAccent = weightAccent;
+        this.weightClarity = weightClarity;
+        this.weightStability = weightStability;
+        this.weightBrightness = weightBrightness;
+        this.weightPitchPosition = weightPitchPosition;
+        this.weightFluency = weightFluency;
+        this.weightPosition = weightPosition;
+        this.weightLength = weightLength;
+        this.weightPitch = weightPitch;
+        this.weightEnergy = weightEnergy;
+        this.weightBaseline = weightBaseline;
+        this.weightIso = weightIso;
+        this.deviationThreshold = deviationThreshold;
     }
 
     /**
@@ -111,6 +170,63 @@ public class Evaluation extends BaseTimeEntity {
                     "시작 날짜는 종료 날짜보다 이전이어야 합니다.",
                     ErrorCode.INVALID_INPUT_VALUE
             );
+        }
+    }
+
+    /**
+     * 모든 FastAPI 파라미터 가중치 검증
+     */
+    public void validateAllFastAPIWeights() {
+        validateToneWeights();
+        validatePauseWeights();
+        validateAccentWeights();
+        validateIntonationWeights();
+        validateDeviationThreshold();
+    }
+
+    private void validateToneWeights() {
+        BigDecimal total = weightClarity.add(weightStability)
+                .add(weightBrightness).add(weightPitchPosition);
+        if (total.compareTo(BigDecimal.ONE) != 0) {
+            throw new InvalidRequestException(
+                    "Tone 가중치 합계는 1.0이어야 합니다. 현재 합계: " + total,
+                    ErrorCode.INVALID_INPUT_VALUE);
+        }
+    }
+
+    private void validatePauseWeights() {
+        BigDecimal total = weightFluency.add(weightPosition).add(weightLength);
+        if (total.compareTo(BigDecimal.ONE) != 0) {
+            throw new InvalidRequestException(
+                    "Pause 가중치 합계는 1.0이어야 합니다. 현재 합계: " + total,
+                    ErrorCode.INVALID_INPUT_VALUE);
+        }
+    }
+
+    private void validateAccentWeights() {
+        BigDecimal total = weightPitch.add(weightEnergy);
+        if (total.compareTo(BigDecimal.ONE) != 0) {
+            throw new InvalidRequestException(
+                    "Accent 가중치 합계는 1.0이어야 합니다. 현재 합계: " + total,
+                    ErrorCode.INVALID_INPUT_VALUE);
+        }
+    }
+
+    private void validateIntonationWeights() {
+        BigDecimal total = weightBaseline.add(weightIso);
+        if (total.compareTo(BigDecimal.ONE) != 0) {
+            throw new InvalidRequestException(
+                    "Intonation 가중치 합계는 1.0이어야 합니다. 현재 합계: " + total,
+                    ErrorCode.INVALID_INPUT_VALUE);
+        }
+    }
+
+    private void validateDeviationThreshold() {
+        if (deviationThreshold.compareTo(BigDecimal.valueOf(5.0)) < 0
+                || deviationThreshold.compareTo(BigDecimal.valueOf(10.0)) > 0) {
+            throw new InvalidRequestException(
+                    "Deviation Threshold는 5.0~10.0 사이여야 합니다. 현재 값: " + deviationThreshold,
+                    ErrorCode.INVALID_INPUT_VALUE);
         }
     }
 

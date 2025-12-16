@@ -45,4 +45,58 @@ public class FastAPIEvaluationRequest {
      */
     @JsonProperty("callback_url")
     private String callbackUrl;
+
+    /**
+     * FastAPI 파라미터 가중치 (gender 포함)
+     */
+    @JsonProperty("weights")
+    private WeightsDTO weights;
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class WeightsDTO {
+        @JsonProperty("weight_clarity")
+        private Double weightClarity;
+
+        @JsonProperty("weight_stability")
+        private Double weightStability;
+
+        @JsonProperty("weight_brightness")
+        private Double weightBrightness;
+
+        @JsonProperty("weight_pitch_position")
+        private Double weightPitchPosition;
+
+        @JsonProperty("weight_fluency")
+        private Double weightFluency;
+
+        @JsonProperty("weight_position")
+        private Double weightPosition;
+
+        @JsonProperty("weight_length")
+        private Double weightLength;
+
+        @JsonProperty("weight_pitch")
+        private Double weightPitch;
+
+        @JsonProperty("weight_energy")
+        private Double weightEnergy;
+
+        @JsonProperty("weight_baseline")
+        private Double weightBaseline;
+
+        @JsonProperty("weight_iso")
+        private Double weightIso;
+
+        @JsonProperty("deviation_threshold")
+        private Double deviationThreshold;
+
+        /**
+         * 성별 (고정값 "F")
+         */
+        @JsonProperty("gender")
+        private String gender;
+    }
 }

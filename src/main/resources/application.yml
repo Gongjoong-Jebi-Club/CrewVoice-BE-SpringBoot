@@ -97,4 +97,4 @@ fastapi:
   callback-url: ${FASTAPI_CALLBACK_URL:http://localhost:8080/api/v1/evaluations/callback}
   timeout:
     connection: 5000  # 5초
-    response: 10000   # 10초
+    response: 60000   # 10초 -> 60초로 변경

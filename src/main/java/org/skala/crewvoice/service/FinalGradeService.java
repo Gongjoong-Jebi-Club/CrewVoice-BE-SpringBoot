@@ -3,6 +3,7 @@ package org.skala.crewvoice.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.skala.crewvoice.domain.*;
+import org.skala.crewvoice.repository.EvaluationStep3Repository;
 import org.skala.crewvoice.repository.FinalGradeRepository;
 import org.skala.crewvoice.repository.SubmissionStep1Repository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 
 /**
  * 최종 성적 관리 서비스
@@ -24,6 +26,7 @@ public class FinalGradeService {
 
     private final FinalGradeRepository finalGradeRepository;
     private final SubmissionStep1Repository submissionStep1Repository;
+    private final EvaluationStep3Repository evaluationStep3Repository;
 
     /**
      * STEP1 완료 시 초기 FinalGrade 레코드 생성
@@ -117,7 +120,8 @@ public class FinalGradeService {
 
     /**
      * Step3 평가 완료 시 점수 업데이트
-     * Step3는 3개 문제의 평균을 저장
+     * Step3는 3개 파트(part 1, 2, 3)의 평균을 저장
+     * 3개 파트가 모두 완료되었을 때만 평균을 계산하여 업데이트
      *
      * @param evaluationStep3 Step3 평가 결과
      */
@@ -139,26 +143,47 @@ public class FinalGradeService {
             return;
         }
 
-        // 가중 평균 점수 계산
-        BigDecimal weightedScore = calculateWeightedScore(
-                submission.getEvaluation(),
-                evaluationStep3.getScorePronunciation(),
-                evaluationStep3.getScorePause(),
-                evaluationStep3.getScoreIntonation(),
-                evaluationStep3.getScoreTone(),
-                evaluationStep3.getScoreSpeed(),
-                evaluationStep3.getScoreAccent()
-        );
+        // 해당 언어로 완료된 모든 Step3 평가 조회 (최대 3개 - part 1, 2, 3)
+        List<EvaluationStep3> completedEvaluations = evaluationStep3Repository
+                .findCompletedByUserIdAndEvaluationIdAndLanguage(userId, evaluationId, language);
+
+        log.info("완료된 Step3 평가 개수 - language: {}, count: {}/3", language.getCode(), completedEvaluations.size());
+
+        // 3개 파트가 모두 완료되지 않았으면 아직 업데이트하지 않음
+        if (completedEvaluations.size() < 3) {
+            log.info("아직 모든 파트가 완료되지 않음 - 평균 계산 대기 중 (현재: {}/3)", completedEvaluations.size());
+            return;
+        }
+
+        // 3개 파트의 평균 계산
+        BigDecimal totalScore = BigDecimal.ZERO;
+
+        for (EvaluationStep3 eval : completedEvaluations) {
+            BigDecimal partScore = calculateWeightedScore(
+                    submission.getEvaluation(),
+                    eval.getScorePronunciation(),
+                    eval.getScorePause(),
+                    eval.getScoreIntonation(),
+                    eval.getScoreTone(),
+                    eval.getScoreSpeed(),
+                    eval.getScoreAccent()
+            );
+            totalScore = totalScore.add(partScore);
+            log.info("Part {} 점수: {}", eval.getSubmission().getPartOrder(), partScore);
+        }
+
+        BigDecimal averageScore = totalScore.divide(BigDecimal.valueOf(3), 2, RoundingMode.HALF_UP);
+        log.info("Step3 3개 파트 평균 점수: {} (합계: {} ÷ 3)", averageScore, totalScore);
 
         // 언어에 따라 업데이트
         if (language == Language.KOREAN) {
-            finalGrade.updateStep3KorScore(weightedScore);
-            log.info("Step3 한국어 점수 업데이트 완료 - userId: {}, evaluationId: {}, score: {}",
-                    userId, evaluationId, weightedScore);
+            finalGrade.updateStep3KorScore(averageScore);
+            log.info("Step3 한국어 점수 업데이트 완료 - userId: {}, evaluationId: {}, avgScore: {}",
+                    userId, evaluationId, averageScore);
         } else if (language == Language.ENGLISH) {
-            finalGrade.updateStep3EngScore(weightedScore);
-            log.info("Step3 영어 점수 업데이트 완료 - userId: {}, evaluationId: {}, score: {}",
-                    userId, evaluationId, weightedScore);
+            finalGrade.updateStep3EngScore(averageScore);
+            log.info("Step3 영어 점수 업데이트 완료 - userId: {}, evaluationId: {}, avgScore: {}",
+                    userId, evaluationId, averageScore);
         }
 
         finalGradeRepository.save(finalGrade);

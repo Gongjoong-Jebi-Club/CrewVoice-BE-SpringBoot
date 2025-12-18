@@ -2,14 +2,18 @@ package org.skala.crewvoice.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.skala.crewvoice.domain.Evaluation;
 import org.skala.crewvoice.domain.EvaluationStep2;
 import org.skala.crewvoice.domain.EvaluationStep3;
 import org.skala.crewvoice.dto.request.CallbackRequest;
 import org.skala.crewvoice.exception.custom.EntityNotFoundException;
 import org.skala.crewvoice.repository.EvaluationStep2Repository;
 import org.skala.crewvoice.repository.EvaluationStep3Repository;
+import org.skala.crewvoice.util.ScoreCalculator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 
 /**
  * 평가 콜백 처리 전담 서비스
@@ -73,6 +77,7 @@ public class EvaluationCallbackService {
                 log.error("평가 완료되었으나 점수 데이터가 없습니다 - taskId: {}", request.getTaskId());
                 evaluation.markAsFailed("점수 데이터 누락");
             } else {
+                // 1. FastAPI 점수를 저장 (overallScore는 임시로 저장)
                 evaluation.updateScores(
                         scores.getScorePronunciation(),
                         scores.getScorePause(),
@@ -85,10 +90,32 @@ public class EvaluationCallbackService {
                 );
                 evaluation.markAsCompleted();
 
-                log.info("Step2 평가 점수 업데이트 완료 - taskId: {}, overallScore: {}",
+                log.info("Step2 평가 점수 업데이트 완료 - taskId: {}, FastAPI overallScore: {}",
                         request.getTaskId(), scores.getOverallScore());
 
-                // FinalGrade 업데이트
+                // 2. 가중치 적용하여 overallScore 재계산
+                try {
+                    Evaluation evaluationConfig = evaluation.getSubmission().getEvaluation();
+                    BigDecimal calculatedOverallScore = ScoreCalculator.calculateWeightedScore(
+                            evaluationConfig,
+                            scores.getScorePronunciation(),
+                            scores.getScorePause(),
+                            scores.getScoreIntonation(),
+                            scores.getScoreTone(),
+                            scores.getScoreSpeed(),
+                            scores.getScoreAccent()
+                    );
+
+                    // overallScore 업데이트
+                    evaluation.updateOverallScore(calculatedOverallScore);
+                    log.info("Step2 overallScore 재계산 완료 - taskId: {}, FastAPI: {}, Calculated: {}",
+                            request.getTaskId(), scores.getOverallScore(), calculatedOverallScore);
+                } catch (Exception e) {
+                    log.error("Step2 overallScore 재계산 실패 - taskId: {}, error: {}",
+                            request.getTaskId(), e.getMessage(), e);
+                }
+
+                // 3. FinalGrade 업데이트
                 try {
                     finalGradeService.updateStep2Score(evaluation);
                     log.info("FinalGrade Step2 점수 업데이트 완료 - taskId: {}", request.getTaskId());
@@ -132,6 +159,7 @@ public class EvaluationCallbackService {
                 log.error("평가 완료되었으나 점수 데이터가 없습니다 - taskId: {}", request.getTaskId());
                 evaluation.markAsFailed("점수 데이터 누락");
             } else {
+                // 1. FastAPI 점수를 저장 (overallScore는 임시로 저장)
                 evaluation.updateScores(
                         scores.getScorePronunciation(),
                         scores.getScorePause(),
@@ -144,10 +172,33 @@ public class EvaluationCallbackService {
                 );
                 evaluation.markAsCompleted();
 
-                log.info("Step3 평가 점수 업데이트 완료 - taskId: {}, language: {}, overallScore: {}",
+                log.info("Step3 평가 점수 업데이트 완료 - taskId: {}, language: {}, FastAPI overallScore: {}",
                         request.getTaskId(), evaluation.getLanguage().getCode(), scores.getOverallScore());
 
-                // FinalGrade 업데이트
+                // 2. 가중치 적용하여 overallScore 재계산
+                try {
+                    Evaluation evaluationConfig = evaluation.getSubmission().getEvaluation();
+                    BigDecimal calculatedOverallScore = ScoreCalculator.calculateWeightedScore(
+                            evaluationConfig,
+                            scores.getScorePronunciation(),
+                            scores.getScorePause(),
+                            scores.getScoreIntonation(),
+                            scores.getScoreTone(),
+                            scores.getScoreSpeed(),
+                            scores.getScoreAccent()
+                    );
+
+                    // overallScore 업데이트
+                    evaluation.updateOverallScore(calculatedOverallScore);
+                    log.info("Step3 overallScore 재계산 완료 - taskId: {}, language: {}, FastAPI: {}, Calculated: {}",
+                            request.getTaskId(), evaluation.getLanguage().getCode(),
+                            scores.getOverallScore(), calculatedOverallScore);
+                } catch (Exception e) {
+                    log.error("Step3 overallScore 재계산 실패 - taskId: {}, language: {}, error: {}",
+                            request.getTaskId(), evaluation.getLanguage().getCode(), e.getMessage(), e);
+                }
+
+                // 3. FinalGrade 업데이트
                 try {
                     finalGradeService.updateStep3Score(evaluation);
                     log.info("FinalGrade Step3 점수 업데이트 완료 - taskId: {}, language: {}",

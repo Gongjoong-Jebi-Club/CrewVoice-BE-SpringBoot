@@ -31,6 +31,7 @@ public class Step2LanguageResultResponse {
 
     /**
      * EvaluationStep2 엔티티로부터 Step2LanguageResultResponse 생성
+     * overallScore는 DB에 저장된 값 사용 (콜백에서 가중치 적용하여 재계산됨)
      *
      * @param evaluation Step2 평가 결과 (한국어 또는 영어)
      * @return Step2LanguageResultResponse

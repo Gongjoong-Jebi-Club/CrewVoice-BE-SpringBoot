@@ -6,8 +6,6 @@ import org.skala.crewvoice.domain.*;
 import org.skala.crewvoice.repository.EvaluationStep3Repository;
 import org.skala.crewvoice.repository.FinalGradeRepository;
 import org.skala.crewvoice.repository.SubmissionStep1Repository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,40 +80,54 @@ public class FinalGradeService {
         Long evaluationId = submission.getEvaluation().getEvaluationId();
         Language language = evaluationStep2.getLanguage();
 
-        log.info("Step2 점수 업데이트 시작 - userId: {}, evaluationId: {}, language: {}",
-                userId, evaluationId, language.getCode());
+        log.info("========== Step2 점수 업데이트 시작 ==========");
+        log.info("userId: {}, evaluationId: {}, language: {}, languageCode: {}",
+                userId, evaluationId, language, language != null ? language.getCode() : "NULL");
+        log.info("evaluationStep2Id: {}, submissionId: {}",
+                evaluationStep2.getId(), submission.getSubmissionId());
 
         // FinalGrade 조회
         FinalGrade finalGrade = finalGradeRepository.findByUserIdAndEvaluationId(userId, evaluationId);
 
         if (finalGrade == null) {
-            log.warn("FinalGrade 레코드가 존재하지 않습니다 - userId: {}, evaluationId: {}", userId, evaluationId);
+            log.error("❌ FinalGrade 레코드가 존재하지 않습니다 - userId: {}, evaluationId: {}", userId, evaluationId);
             return;
         }
 
-        // 가중 평균 점수 계산
-        BigDecimal weightedScore = calculateWeightedScore(
-                submission.getEvaluation(),
-                evaluationStep2.getScorePronunciation(),
-                evaluationStep2.getScorePause(),
-                evaluationStep2.getScoreIntonation(),
-                evaluationStep2.getScoreTone(),
-                evaluationStep2.getScoreSpeed(),
-                evaluationStep2.getScoreAccent()
-        );
+        log.info("FinalGrade 조회 완료 - gradeId: {}, 현재 step2KorScore: {}, step2EngScore: {}",
+                finalGrade.getGradeId(), finalGrade.getStep2KorScore(), finalGrade.getStep2EngScore());
+
+        // evaluations_step2의 overall_score를 그대로 사용
+        BigDecimal overallScore = evaluationStep2.getOverallScore();
+
+        if (overallScore == null) {
+            log.error("❌ overall_score가 null입니다 - evaluationStep2Id: {}", evaluationStep2.getId());
+            return;
+        }
+
+        log.info("evaluations_step2의 overall_score: {}", overallScore);
 
         // 언어에 따라 업데이트
         if (language == Language.KOREAN) {
-            finalGrade.updateStep2KorScore(weightedScore);
-            log.info("Step2 한국어 점수 업데이트 완료 - userId: {}, evaluationId: {}, score: {}",
-                    userId, evaluationId, weightedScore);
+            log.info("✓ 한국어 점수 업데이트 진행 - 변경 전: {}, 변경 후: {}",
+                    finalGrade.getStep2KorScore(), overallScore);
+            finalGrade.updateStep2KorScore(overallScore);
+            log.info("✓ Step2 한국어 점수 업데이트 완료 - userId: {}, evaluationId: {}, score: {}",
+                    userId, evaluationId, overallScore);
         } else if (language == Language.ENGLISH) {
-            finalGrade.updateStep2EngScore(weightedScore);
-            log.info("Step2 영어 점수 업데이트 완료 - userId: {}, evaluationId: {}, score: {}",
-                    userId, evaluationId, weightedScore);
+            log.info("✓ 영어 점수 업데이트 진행 - 변경 전: {}, 변경 후: {}",
+                    finalGrade.getStep2EngScore(), overallScore);
+            finalGrade.updateStep2EngScore(overallScore);
+            log.info("✓ Step2 영어 점수 업데이트 완료 - userId: {}, evaluationId: {}, score: {}",
+                    userId, evaluationId, overallScore);
+        } else {
+            log.error("❌ 알 수 없는 언어 값 - language: {}", language);
         }
 
-        finalGradeRepository.save(finalGrade);
+        FinalGrade savedGrade = finalGradeRepository.save(finalGrade);
+        log.info("FinalGrade 저장 완료 - gradeId: {}, step2KorScore: {}, step2EngScore: {}",
+                savedGrade.getGradeId(), savedGrade.getStep2KorScore(), savedGrade.getStep2EngScore());
+        log.info("========== Step2 점수 업데이트 종료 ==========");
     }
 
     /**
@@ -155,25 +167,24 @@ public class FinalGradeService {
             return;
         }
 
-        // 3개 파트의 평균 계산
+        // 3개 파트의 overall_score 평균 계산
         BigDecimal totalScore = BigDecimal.ZERO;
 
         for (EvaluationStep3 eval : completedEvaluations) {
-            BigDecimal partScore = calculateWeightedScore(
-                    submission.getEvaluation(),
-                    eval.getScorePronunciation(),
-                    eval.getScorePause(),
-                    eval.getScoreIntonation(),
-                    eval.getScoreTone(),
-                    eval.getScoreSpeed(),
-                    eval.getScoreAccent()
-            );
-            totalScore = totalScore.add(partScore);
-            log.info("Part {} 점수: {}", eval.getSubmission().getPartOrder(), partScore);
+            BigDecimal overallScore = eval.getOverallScore();
+
+            if (overallScore == null) {
+                log.error("❌ Part {}의 overall_score가 null입니다 - evaluationStep3Id: {}",
+                        eval.getSubmission().getPartOrder(), eval.getId());
+                return;
+            }
+
+            totalScore = totalScore.add(overallScore);
+            log.info("Part {} overall_score: {}", eval.getSubmission().getPartOrder(), overallScore);
         }
 
         BigDecimal averageScore = totalScore.divide(BigDecimal.valueOf(3), 2, RoundingMode.HALF_UP);
-        log.info("Step3 3개 파트 평균 점수: {} (합계: {} ÷ 3)", averageScore, totalScore);
+        log.info("Step3 3개 파트 overall_score 평균: {} (합계: {} ÷ 3)", averageScore, totalScore);
 
         // 언어에 따라 업데이트
         if (language == Language.KOREAN) {
@@ -187,71 +198,5 @@ public class FinalGradeService {
         }
 
         finalGradeRepository.save(finalGrade);
-    }
-
-    /**
-     * 가중 평균 점수 계산
-     * 각 항목 점수에 가중치를 곱한 후 합산 (가중치 합 = 100)
-     *
-     * @param evaluation 평가 (가중치 정보 포함)
-     * @param scorePronunciation 발음 점수
-     * @param scorePause 쉼 점수
-     * @param scoreIntonation 억양 점수
-     * @param scoreTone 톤 점수
-     * @param scoreSpeed 속도 점수
-     * @param scoreAccent 강세 점수
-     * @return 가중 평균 점수
-     */
-    private BigDecimal calculateWeightedScore(
-            Evaluation evaluation,
-            BigDecimal scorePronunciation,
-            BigDecimal scorePause,
-            BigDecimal scoreIntonation,
-            BigDecimal scoreTone,
-            BigDecimal scoreSpeed,
-            BigDecimal scoreAccent
-    ) {
-        // FastAPI가 반환한 점수 로깅
-        log.info("========== FastAPI 점수 상세 ==========");
-        log.info("발음(Pronunciation): {} (가중치: {})", scorePronunciation, evaluation.getWeightPronunciation());
-        log.info("쉼(Pause): {} (가중치: {})", scorePause, evaluation.getWeightPause());
-        log.info("억양(Intonation): {} (가중치: {})", scoreIntonation, evaluation.getWeightIntonation());
-        log.info("톤(Tone): {} (가중치: {})", scoreTone, evaluation.getWeightTone());
-        log.info("속도(Speed): {} (가중치: {})", scoreSpeed, evaluation.getWeightSpeed());
-        log.info("강세(Accent): {} (가중치: {})", scoreAccent, evaluation.getWeightAccent());
-
-        BigDecimal weightedSum = BigDecimal.ZERO;
-
-        // 각 항목 점수 × 가중치 계산 및 로깅
-        BigDecimal weightedPronunciation = scorePronunciation.multiply(evaluation.getWeightPronunciation());
-        BigDecimal weightedPause = scorePause.multiply(evaluation.getWeightPause());
-        BigDecimal weightedIntonation = scoreIntonation.multiply(evaluation.getWeightIntonation());
-        BigDecimal weightedTone = scoreTone.multiply(evaluation.getWeightTone());
-        BigDecimal weightedSpeed = scoreSpeed.multiply(evaluation.getWeightSpeed());
-        BigDecimal weightedAccent = scoreAccent.multiply(evaluation.getWeightAccent());
-
-        log.info("========== 가중 점수 계산 ==========");
-        log.info("발음 가중 점수: {} × {} = {}", scorePronunciation, evaluation.getWeightPronunciation(), weightedPronunciation);
-        log.info("쉼 가중 점수: {} × {} = {}", scorePause, evaluation.getWeightPause(), weightedPause);
-        log.info("억양 가중 점수: {} × {} = {}", scoreIntonation, evaluation.getWeightIntonation(), weightedIntonation);
-        log.info("톤 가중 점수: {} × {} = {}", scoreTone, evaluation.getWeightTone(), weightedTone);
-        log.info("속도 가중 점수: {} × {} = {}", scoreSpeed, evaluation.getWeightSpeed(), weightedSpeed);
-        log.info("강세 가중 점수: {} × {} = {}", scoreAccent, evaluation.getWeightAccent(), weightedAccent);
-
-        weightedSum = weightedSum.add(weightedPronunciation);
-        weightedSum = weightedSum.add(weightedPause);
-        weightedSum = weightedSum.add(weightedIntonation);
-        weightedSum = weightedSum.add(weightedTone);
-        weightedSum = weightedSum.add(weightedSpeed);
-        weightedSum = weightedSum.add(weightedAccent);
-
-        log.info("가중 점수 합계: {}", weightedSum);
-
-        // 가중치 합계가 100이므로 100으로 나눔
-        BigDecimal finalScore = weightedSum.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-        log.info("최종 가중 평균 점수: {} ÷ 100 = {}", weightedSum, finalScore);
-        log.info("=====================================");
-
-        return finalScore;
     }
 }

@@ -112,4 +112,12 @@ public class EvaluationStep2 {
         this.status = "FAILED";
         this.errorMessage = errorMessage;
     }
+
+    /**
+     * overallScore만 업데이트
+     * 가중치 계산 후 호출
+     */
+    public void updateOverallScore(BigDecimal overallScore) {
+        this.overallScore = overallScore;
+    }
 }

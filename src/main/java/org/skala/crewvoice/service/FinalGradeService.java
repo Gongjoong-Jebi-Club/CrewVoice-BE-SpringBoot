@@ -110,26 +110,31 @@ public class FinalGradeService {
 
         log.info("evaluations_step2의 overall_score: {}", overallScore);
 
-        // 언어에 따라 업데이트
+        // 언어에 따라 업데이트 (Race Condition 방지를 위해 @Modifying 쿼리 사용)
+        int updatedRows = 0;
         if (language == Language.KOREAN) {
             log.info("✓ 한국어 점수 업데이트 진행 - 변경 전: {}, 변경 후: {}",
                     finalGrade.getStep2KorScore(), overallScore);
-            finalGrade.updateStep2KorScore(overallScore);
-            log.info("✓ Step2 한국어 점수 업데이트 완료 - userId: {}, evaluationId: {}, score: {}",
-                    userId, evaluationId, overallScore);
+            updatedRows = finalGradeRepository.updateStep2KorScore(userId, evaluationId, overallScore);
+            log.info("✓ Step2 한국어 점수 업데이트 완료 - userId: {}, evaluationId: {}, score: {}, updatedRows: {}",
+                    userId, evaluationId, overallScore, updatedRows);
         } else if (language == Language.ENGLISH) {
             log.info("✓ 영어 점수 업데이트 진행 - 변경 전: {}, 변경 후: {}",
                     finalGrade.getStep2EngScore(), overallScore);
-            finalGrade.updateStep2EngScore(overallScore);
-            log.info("✓ Step2 영어 점수 업데이트 완료 - userId: {}, evaluationId: {}, score: {}",
-                    userId, evaluationId, overallScore);
+            updatedRows = finalGradeRepository.updateStep2EngScore(userId, evaluationId, overallScore);
+            log.info("✓ Step2 영어 점수 업데이트 완료 - userId: {}, evaluationId: {}, score: {}, updatedRows: {}",
+                    userId, evaluationId, overallScore, updatedRows);
         } else {
             log.error("❌ 알 수 없는 언어 값 - language: {}", language);
         }
 
-        FinalGrade savedGrade = finalGradeRepository.save(finalGrade);
-        log.info("FinalGrade 저장 완료 - gradeId: {}, step2KorScore: {}, step2EngScore: {}",
-                savedGrade.getGradeId(), savedGrade.getStep2KorScore(), savedGrade.getStep2EngScore());
+        if (updatedRows == 0) {
+            log.error("❌ FinalGrade 업데이트 실패 - 업데이트된 행이 없음 (userId: {}, evaluationId: {})",
+                    userId, evaluationId);
+        } else {
+            log.info("FinalGrade 저장 완료 - userId: {}, evaluationId: {}, language: {}, updatedRows: {}",
+                    userId, evaluationId, language.getCode(), updatedRows);
+        }
         log.info("========== Step2 점수 업데이트 종료 ==========");
     }
 
@@ -192,17 +197,21 @@ public class FinalGradeService {
         BigDecimal averageScore = totalScore.divide(BigDecimal.valueOf(3), 2, RoundingMode.HALF_UP);
         log.info("Step3 3개 파트 overall_score 평균: {} (합계: {} ÷ 3)", averageScore, totalScore);
 
-        // 언어에 따라 업데이트
+        // 언어에 따라 업데이트 (Race Condition 방지를 위해 @Modifying 쿼리 사용)
+        int updatedRows = 0;
         if (language == Language.KOREAN) {
-            finalGrade.updateStep3KorScore(averageScore);
-            log.info("Step3 한국어 점수 업데이트 완료 - userId: {}, evaluationId: {}, avgScore: {}",
-                    userId, evaluationId, averageScore);
+            updatedRows = finalGradeRepository.updateStep3KorScore(userId, evaluationId, averageScore);
+            log.info("Step3 한국어 점수 업데이트 완료 - userId: {}, evaluationId: {}, avgScore: {}, updatedRows: {}",
+                    userId, evaluationId, averageScore, updatedRows);
         } else if (language == Language.ENGLISH) {
-            finalGrade.updateStep3EngScore(averageScore);
-            log.info("Step3 영어 점수 업데이트 완료 - userId: {}, evaluationId: {}, avgScore: {}",
-                    userId, evaluationId, averageScore);
+            updatedRows = finalGradeRepository.updateStep3EngScore(userId, evaluationId, averageScore);
+            log.info("Step3 영어 점수 업데이트 완료 - userId: {}, evaluationId: {}, avgScore: {}, updatedRows: {}",
+                    userId, evaluationId, averageScore, updatedRows);
         }
 
-        finalGradeRepository.save(finalGrade);
+        if (updatedRows == 0) {
+            log.error("❌ FinalGrade Step3 업데이트 실패 - 업데이트된 행이 없음 (userId: {}, evaluationId: {})",
+                    userId, evaluationId);
+        }
     }
 }

@@ -2,9 +2,11 @@ package org.skala.crewvoice.repository;
 
 import org.skala.crewvoice.domain.FinalGrade;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,5 +50,33 @@ public interface FinalGradeRepository extends JpaRepository<FinalGrade, Long> {
             "ORDER BY fg.createdAt DESC " +
             "LIMIT 1")
     Optional<FinalGrade> findLatestByUserId(@Param("userId") Long userId);
+
+    /**
+     * Step2 한국어 점수만 업데이트 (Race Condition 방지)
+     */
+    @Modifying
+    @Query("UPDATE FinalGrade fg SET fg.step2KorScore = :score WHERE fg.user.id = :userId AND fg.evaluation.evaluationId = :evaluationId")
+    int updateStep2KorScore(@Param("userId") Long userId, @Param("evaluationId") Long evaluationId, @Param("score") BigDecimal score);
+
+    /**
+     * Step2 영어 점수만 업데이트 (Race Condition 방지)
+     */
+    @Modifying
+    @Query("UPDATE FinalGrade fg SET fg.step2EngScore = :score WHERE fg.user.id = :userId AND fg.evaluation.evaluationId = :evaluationId")
+    int updateStep2EngScore(@Param("userId") Long userId, @Param("evaluationId") Long evaluationId, @Param("score") BigDecimal score);
+
+    /**
+     * Step3 한국어 점수만 업데이트 (Race Condition 방지)
+     */
+    @Modifying
+    @Query("UPDATE FinalGrade fg SET fg.step3KorScore = :score WHERE fg.user.id = :userId AND fg.evaluation.evaluationId = :evaluationId")
+    int updateStep3KorScore(@Param("userId") Long userId, @Param("evaluationId") Long evaluationId, @Param("score") BigDecimal score);
+
+    /**
+     * Step3 영어 점수만 업데이트 (Race Condition 방지)
+     */
+    @Modifying
+    @Query("UPDATE FinalGrade fg SET fg.step3EngScore = :score WHERE fg.user.id = :userId AND fg.evaluation.evaluationId = :evaluationId")
+    int updateStep3EngScore(@Param("userId") Long userId, @Param("evaluationId") Long evaluationId, @Param("score") BigDecimal score);
 
 }

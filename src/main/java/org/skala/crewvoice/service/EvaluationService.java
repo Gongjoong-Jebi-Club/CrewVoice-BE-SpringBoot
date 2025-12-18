@@ -141,18 +141,29 @@ public class EvaluationService {
     /**
      * 현재 진행 중인 평가 목록 조회 (피평가자용)
      * 현재 시간이 평가 기간 내(startDate ~ endDate)에 있는 평가만 조회합니다.
+     * CREW 사용자의 경우 본인에게 배정된 평가만 조회됩니다 (evaluation.created_at > user.created_at)
      *
      * @param user 인증된 사용자
      * @return 진행 중인 평가 목록 (사용자별 응시 여부 포함)
      */
     public ActiveEvaluationListResponse getActiveEvaluations(User user) {
-        log.info("현재 진행 중인 평가 목록 조회 시작 (피평가자용) - userId: {}", user.getId());
+        log.info("현재 진행 중인 평가 목록 조회 시작 (피평가자용) - userId: {}, role: {}",
+                user.getId(), user.getRole());
 
         // 1. 현재 시간 기준으로 진행 중인 평가만 조회 (startDate <= now <= endDate)
+        // CREW인 경우 user.created_at 이후 생성된 평가만, ADMIN/MANAGER는 모든 평가 조회
         OffsetDateTime now = OffsetDateTime.now();
-        List<Evaluation> activeEvaluations = evaluationRepository.findActiveEvaluations(now);
+        List<Evaluation> activeEvaluations;
 
-        log.info("진행 중인 평가 수: {}", activeEvaluations.size());
+        if (user.isCrew()) {
+            // CREW 사용자: 사용자 생성 이후 생성된 평가만 조회 (배정된 평가만)
+            activeEvaluations = evaluationRepository.findActiveEvaluationsForCrew(now, user.getCreatedAt());
+            log.info("진행 중인 평가 수 (CREW 필터링 적용): {}", activeEvaluations.size());
+        } else {
+            // ADMIN/MANAGER: 모든 활성 평가 조회
+            activeEvaluations = evaluationRepository.findActiveEvaluations(now);
+            log.info("진행 중인 평가 수 (모든 평가): {}", activeEvaluations.size());
+        }
 
         // 2. Response DTO 변환 (사용자별 is_taken 포함)
         List<ActiveEvaluationResponse> responseList = activeEvaluations.stream()

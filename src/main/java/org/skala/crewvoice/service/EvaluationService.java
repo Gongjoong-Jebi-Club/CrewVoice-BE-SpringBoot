@@ -222,15 +222,12 @@ public class EvaluationService {
      * NOTE: 트랜잭션 경계 최소화
      * - DB 작업만 @Transactional 메서드로 분리
      * - S3, WebClient 호출은 트랜잭션 외부에서 실행
+     * - submission을 한 번만 조회하여 Race Condition 방지
      */
     private void processStep2Evaluation(Long submissionId) {
         log.info("Step2 평가 처리 시작 - submissionId: {}", submissionId);
 
-        // STEP 1: Submission 조회 및 평가 레코드 생성 (트랜잭션 필요)
-        EvaluationStep2 evaluation = createEvaluationStep2Record(submissionId);
-        String taskId = evaluation.getTaskId();
-
-        // STEP 2: Submission 재조회 (필요한 정보 추출)
+        // STEP 1: Submission 조회 (JOIN FETCH로 필요한 데이터 모두 로딩)
         SubmissionStep2 submission = submissionStep2Repository
                 .findByIdWithQuestion(submissionId)
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -238,20 +235,23 @@ public class EvaluationService {
                         org.skala.crewvoice.exception.ErrorCode.SUBMISSION_NOT_FOUND
                 ));
 
+        // STEP 2: 평가 레코드 생성 (submission 객체 전달)
+        EvaluationStep2 evaluation = createEvaluationStep2Record(submission);
+        String taskId = evaluation.getTaskId();
+
+        // STEP 3: Submission 정보 추출 (메모리에서 재사용)
         QuestionStep2 question = submission.getQuestion();
         Language language = submission.getLanguage();
-
-        // Evaluation 엔티티 조회 (가중치 정보 필요)
         Evaluation evaluationEntity = submission.getEvaluation();
 
-        // STEP 3: S3 Pre-signed URL 생성 (트랜잭션 외부 - 외부 API 호출)
+        // STEP 4: S3 Pre-signed URL 생성 (트랜잭션 외부 - 외부 API 호출)
         String presignedUrl = s3Service.generatePresignedUrl(
                 submission.getAudioFileUrl(),
                 (int) Duration.ofMinutes(15).toSeconds()
         );
         log.info("S3 Pre-signed URL 생성 완료");
 
-        // STEP 4: 스크립트 선택
+        // STEP 5: 스크립트 선택
         String script = (language == Language.KOREAN)
                 ? question.getScriptKorean()
                 : question.getScriptEnglish();
@@ -259,7 +259,7 @@ public class EvaluationService {
         log.info("평가 스크립트 선택 완료 - language: {}, scriptLength: {}",
                 language.getCode(), script.length());
 
-        // STEP 5: FastAPI 요청 (트랜잭션 외부 - 외부 API 호출)
+        // STEP 6: FastAPI 요청 (트랜잭션 외부 - 외부 API 호출)
         sendEvaluationRequest(taskId, presignedUrl, script, language.getCode(), evaluationEntity, evaluation);
 
         log.info("Step2 평가 시작 완료 (비동기) - submissionId: {}, taskId: {}", submissionId, taskId);
@@ -267,20 +267,14 @@ public class EvaluationService {
 
     /**
      * Step2 평가 레코드 생성 (트랜잭션 필요)
+     *
+     * @param submission 이미 조회된 submission 객체 (재조회하지 않음)
      */
     @Transactional
-    protected EvaluationStep2 createEvaluationStep2Record(Long submissionId) {
-        // Submission 조회
-        SubmissionStep2 submission = submissionStep2Repository
-                .findByIdWithQuestion(submissionId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "제출 내역을 찾을 수 없습니다. submissionId: " + submissionId,
-                        org.skala.crewvoice.exception.ErrorCode.SUBMISSION_NOT_FOUND
-                ));
-
+    protected EvaluationStep2 createEvaluationStep2Record(SubmissionStep2 submission) {
         Language language = submission.getLanguage();
         log.info("제출 내역 조회 완료 - submissionId: {}, language: {}",
-                submissionId, language.getCode());
+                submission.getSubmissionId(), language.getCode());
 
         // Task ID 생성
         String taskId = UUID.randomUUID().toString();
@@ -388,15 +382,12 @@ public class EvaluationService {
      * NOTE: 트랜잭션 경계 최소화
      * - DB 작업만 @Transactional 메서드로 분리
      * - S3, WebClient 호출은 트랜잭션 외부에서 실행
+     * - submission을 한 번만 조회하여 Race Condition 방지
      */
     private void processStep3Evaluation(Long submissionId) {
         log.info("Step3 평가 처리 시작 - submissionId: {}", submissionId);
 
-        // STEP 1: Submission 조회 및 평가 레코드 생성 (트랜잭션 필요)
-        EvaluationStep3 evaluation = createEvaluationStep3Record(submissionId);
-        String taskId = evaluation.getTaskId();
-
-        // STEP 2: Submission 재조회 (필요한 정보 추출)
+        // STEP 1: Submission 조회 (JOIN FETCH로 필요한 데이터 모두 로딩)
         SubmissionStep3 submission = submissionStep3Repository
                 .findByIdWithQuestion(submissionId)
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -404,20 +395,23 @@ public class EvaluationService {
                         org.skala.crewvoice.exception.ErrorCode.SUBMISSION_NOT_FOUND
                 ));
 
+        // STEP 2: 평가 레코드 생성 (submission 객체 전달)
+        EvaluationStep3 evaluation = createEvaluationStep3Record(submission);
+        String taskId = evaluation.getTaskId();
+
+        // STEP 3: Submission 정보 추출 (메모리에서 재사용)
         QuestionStep3 question = submission.getQuestion();
         Language language = submission.getLanguage();
-
-        // Evaluation 엔티티 조회 (가중치 정보 필요)
         Evaluation evaluationEntity = submission.getEvaluation();
 
-        // STEP 3: S3 Pre-signed URL 생성 (트랜잭션 외부 - 외부 API 호출)
+        // STEP 4: S3 Pre-signed URL 생성 (트랜잭션 외부 - 외부 API 호출)
         String presignedUrl = s3Service.generatePresignedUrl(
                 submission.getAudioFileUrl(),
                 (int) Duration.ofMinutes(15).toSeconds()
         );
         log.info("S3 Pre-signed URL 생성 완료");
 
-        // STEP 4: 스크립트 선택
+        // STEP 5: 스크립트 선택
         String script = (language == Language.KOREAN)
                 ? question.getScriptKorean()
                 : question.getScriptEnglish();
@@ -425,7 +419,7 @@ public class EvaluationService {
         log.info("평가 스크립트 선택 완료 - language: {}, scriptLength: {}",
                 language.getCode(), script.length());
 
-        // STEP 5: FastAPI 요청 (트랜잭션 외부 - 외부 API 호출)
+        // STEP 6: FastAPI 요청 (트랜잭션 외부 - 외부 API 호출)
         sendEvaluationRequestForStep3(taskId, presignedUrl, script, language.getCode(), evaluationEntity, evaluation);
 
         log.info("Step3 평가 시작 완료 (비동기) - submissionId: {}, taskId: {}", submissionId, taskId);
@@ -433,20 +427,14 @@ public class EvaluationService {
 
     /**
      * Step3 평가 레코드 생성 (트랜잭션 필요)
+     *
+     * @param submission 이미 조회된 submission 객체 (재조회하지 않음)
      */
     @Transactional
-    protected EvaluationStep3 createEvaluationStep3Record(Long submissionId) {
-        // Submission 조회
-        SubmissionStep3 submission = submissionStep3Repository
-                .findByIdWithQuestion(submissionId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Step3 제출 내역을 찾을 수 없습니다. submissionId: " + submissionId,
-                        org.skala.crewvoice.exception.ErrorCode.SUBMISSION_NOT_FOUND
-                ));
-
+    protected EvaluationStep3 createEvaluationStep3Record(SubmissionStep3 submission) {
         Language language = submission.getLanguage();
         log.info("Step3 제출 내역 조회 완료 - submissionId: {}, language: {}, partOrder: {}",
-                submissionId, language.getCode(), submission.getPartOrder());
+                submission.getSubmissionId(), language.getCode(), submission.getPartOrder());
 
         // Task ID 생성
         String taskId = UUID.randomUUID().toString();

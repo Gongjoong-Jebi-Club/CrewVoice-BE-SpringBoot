@@ -75,6 +75,9 @@ public class FinalGradeService {
      */
     @Transactional
     public void updateStep2Score(EvaluationStep2 evaluationStep2) {
+        log.info("🔵 [FinalGradeService.updateStep2Score] 메서드 호출됨 - evaluationStep2Id: {}",
+                evaluationStep2 != null ? evaluationStep2.getId() : "NULL");
+
         SubmissionStep2 submission = evaluationStep2.getSubmission();
         Long userId = submission.getUser().getId();
         Long evaluationId = submission.getEvaluation().getEvaluationId();
@@ -139,6 +142,9 @@ public class FinalGradeService {
      */
     @Transactional
     public void updateStep3Score(EvaluationStep3 evaluationStep3) {
+        log.info("🔵 [FinalGradeService.updateStep3Score] 메서드 호출됨 - evaluationStep3Id: {}",
+                evaluationStep3 != null ? evaluationStep3.getId() : "NULL");
+
         SubmissionStep3 submission = evaluationStep3.getSubmission();
         Long userId = submission.getUser().getId();
         Long evaluationId = submission.getEvaluation().getEvaluationId();

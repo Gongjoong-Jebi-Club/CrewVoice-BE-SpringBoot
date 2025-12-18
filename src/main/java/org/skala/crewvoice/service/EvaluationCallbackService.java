@@ -117,10 +117,12 @@ public class EvaluationCallbackService {
 
                 // 3. FinalGrade 업데이트
                 try {
+                    log.info("🔵 [EvaluationCallbackService] FinalGradeService.updateStep2Score() 호출 시작 - taskId: {}, evaluationStep2Id: {}",
+                            request.getTaskId(), evaluation.getId());
                     finalGradeService.updateStep2Score(evaluation);
-                    log.info("FinalGrade Step2 점수 업데이트 완료 - taskId: {}", request.getTaskId());
+                    log.info("✅ [EvaluationCallbackService] FinalGrade Step2 점수 업데이트 완료 - taskId: {}", request.getTaskId());
                 } catch (Exception e) {
-                    log.error("FinalGrade Step2 점수 업데이트 실패 - taskId: {}, error: {}",
+                    log.error("❌ [EvaluationCallbackService] FinalGrade Step2 점수 업데이트 실패 - taskId: {}, error: {}",
                             request.getTaskId(), e.getMessage(), e);
                 }
             }
@@ -200,11 +202,13 @@ public class EvaluationCallbackService {
 
                 // 3. FinalGrade 업데이트
                 try {
+                    log.info("🔵 [EvaluationCallbackService] FinalGradeService.updateStep3Score() 호출 시작 - taskId: {}, evaluationStep3Id: {}, language: {}",
+                            request.getTaskId(), evaluation.getId(), evaluation.getLanguage().getCode());
                     finalGradeService.updateStep3Score(evaluation);
-                    log.info("FinalGrade Step3 점수 업데이트 완료 - taskId: {}, language: {}",
+                    log.info("✅ [EvaluationCallbackService] FinalGrade Step3 점수 업데이트 완료 - taskId: {}, language: {}",
                             request.getTaskId(), evaluation.getLanguage().getCode());
                 } catch (Exception e) {
-                    log.error("FinalGrade Step3 점수 업데이트 실패 - taskId: {}, language: {}, error: {}",
+                    log.error("❌ [EvaluationCallbackService] FinalGrade Step3 점수 업데이트 실패 - taskId: {}, language: {}, error: {}",
                             request.getTaskId(), evaluation.getLanguage().getCode(), e.getMessage(), e);
                 }
             }

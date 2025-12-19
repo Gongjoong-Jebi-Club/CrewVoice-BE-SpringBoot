@@ -110,31 +110,26 @@ public class FinalGradeService {
 
         log.info("evaluations_step2의 overall_score: {}", overallScore);
 
-        // 언어에 따라 업데이트 (Race Condition 방지를 위해 @Modifying 쿼리 사용)
-        int updatedRows = 0;
+        // 언어에 따라 업데이트 (Entity 메서드 사용 -> 등급 자동 재계산)
         if (language == Language.KOREAN) {
             log.info("✓ 한국어 점수 업데이트 진행 - 변경 전: {}, 변경 후: {}",
                     finalGrade.getStep2KorScore(), overallScore);
-            updatedRows = finalGradeRepository.updateStep2KorScore(userId, evaluationId, overallScore);
-            log.info("✓ Step2 한국어 점수 업데이트 완료 - userId: {}, evaluationId: {}, score: {}, updatedRows: {}",
-                    userId, evaluationId, overallScore, updatedRows);
+            finalGrade.updateStep2KorScore(overallScore);
         } else if (language == Language.ENGLISH) {
             log.info("✓ 영어 점수 업데이트 진행 - 변경 전: {}, 변경 후: {}",
                     finalGrade.getStep2EngScore(), overallScore);
-            updatedRows = finalGradeRepository.updateStep2EngScore(userId, evaluationId, overallScore);
-            log.info("✓ Step2 영어 점수 업데이트 완료 - userId: {}, evaluationId: {}, score: {}, updatedRows: {}",
-                    userId, evaluationId, overallScore, updatedRows);
+            finalGrade.updateStep2EngScore(overallScore);
         } else {
             log.error("❌ 알 수 없는 언어 값 - language: {}", language);
+            return;
         }
 
-        if (updatedRows == 0) {
-            log.error("❌ FinalGrade 업데이트 실패 - 업데이트된 행이 없음 (userId: {}, evaluationId: {})",
-                    userId, evaluationId);
-        } else {
-            log.info("FinalGrade 저장 완료 - userId: {}, evaluationId: {}, language: {}, updatedRows: {}",
-                    userId, evaluationId, language.getCode(), updatedRows);
-        }
+        // 변경 감지(Dirty Checking)에 의해 트랜잭션 종료 시 자동 UPDATE
+        // 하지만 명시적으로 save 호출 (로그 및 확실한 반영을 위해)
+        finalGradeRepository.save(finalGrade);
+
+        log.info("✓ Step2 점수 및 등급 업데이트 완료 - userId: {}, evaluationId: {}, language: {}, 등급: Kor={}, Eng={}",
+                userId, evaluationId, language.getCode(), finalGrade.getKorGrade(), finalGrade.getEngGrade());
         log.info("========== Step2 점수 업데이트 종료 ==========");
     }
 
@@ -197,21 +192,19 @@ public class FinalGradeService {
         BigDecimal averageScore = totalScore.divide(BigDecimal.valueOf(3), 2, RoundingMode.HALF_UP);
         log.info("Step3 3개 파트 overall_score 평균: {} (합계: {} ÷ 3)", averageScore, totalScore);
 
-        // 언어에 따라 업데이트 (Race Condition 방지를 위해 @Modifying 쿼리 사용)
-        int updatedRows = 0;
+        // 언어에 따라 업데이트 (Entity 메서드 사용 -> 등급 자동 재계산)
         if (language == Language.KOREAN) {
-            updatedRows = finalGradeRepository.updateStep3KorScore(userId, evaluationId, averageScore);
-            log.info("Step3 한국어 점수 업데이트 완료 - userId: {}, evaluationId: {}, avgScore: {}, updatedRows: {}",
-                    userId, evaluationId, averageScore, updatedRows);
+            finalGrade.updateStep3KorScore(averageScore);
+            log.info("Step3 한국어 점수 업데이트 - avgScore: {}", averageScore);
         } else if (language == Language.ENGLISH) {
-            updatedRows = finalGradeRepository.updateStep3EngScore(userId, evaluationId, averageScore);
-            log.info("Step3 영어 점수 업데이트 완료 - userId: {}, evaluationId: {}, avgScore: {}, updatedRows: {}",
-                    userId, evaluationId, averageScore, updatedRows);
+            finalGrade.updateStep3EngScore(averageScore);
+            log.info("Step3 영어 점수 업데이트 - avgScore: {}", averageScore);
         }
 
-        if (updatedRows == 0) {
-            log.error("❌ FinalGrade Step3 업데이트 실패 - 업데이트된 행이 없음 (userId: {}, evaluationId: {})",
-                    userId, evaluationId);
-        }
+        // 변경 감지(Dirty Checking)에 의해 트랜잭션 종료 시 자동 UPDATE
+        finalGradeRepository.save(finalGrade);
+
+        log.info("✓ Step3 점수 및 등급 업데이트 완료 - userId: {}, evaluationId: {}, language: {}, 등급: Kor={}, Eng={}",
+                userId, evaluationId, language.getCode(), finalGrade.getKorGrade(), finalGrade.getEngGrade());
     }
 }

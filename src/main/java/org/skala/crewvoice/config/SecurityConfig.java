@@ -29,10 +29,13 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/v1/login", "/api/v1/sign-up", "/api/v1/refresh", "/api/v1/test/**", "/swagger-ui/**", "/v3/api-docs/**", "/health").permitAll()
-                        .requestMatchers("/api/v1/evaluations/callback").permitAll() // 콜백은 CallbackAuthenticationFilter에서 API Key 검증
-                        .anyRequest().authenticated() // 토큰 없이 접근 시 403 Forbidden Error 발생
+                        .requestMatchers("/api/v1/evaluations/callback").permitAll() // CallbackAuthenticationFilter에서 별도의 API Key로 인증 처리
+                        .anyRequest().authenticated() // 그 외 모든 요청은 JWT 인증 필요
                 )
-                .addFilterBefore(callbackAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // 콜백 필터를 JWT 필터 앞에 배치 (순서상 먼저 등록되면 index N, 그 다음 JWT가 UPAF(N+1) 앞에 등록되면 index N+1이 되어 Callback -> JWT -> UPAF 순서가 됨)
+                // Filter 순서: CallbackAuthenticationFilter -> JwtAuthenticationFilter -> UsernamePasswordAuthenticationFilter
+                // 1. CallbackFilter: 외부 AI 서비스의 콜백 요청(API Key)을 처리. 해당 경로가 아니면 다음 필터로 통과.
+                // 2. JwtFilter: 일반 사용자의 Access Token을 검증.
+                .addFilterBefore(callbackAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

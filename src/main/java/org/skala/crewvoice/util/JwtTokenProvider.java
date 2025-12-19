@@ -62,8 +62,13 @@ public class JwtTokenProvider {
     }
 
     /**
-     * 만료된 토큰에서도 subject(email)를 추출
-     * Refresh 시 만료된 accessToken에서 userId를 파악하기 위해 사용
+     * 만료된 토큰에서 subject(email)를 강제로 추출합니다.
+     * <p>
+     * <b>사용 목적:</b> Access Token 재발급(Refresh) 요청 시, 클라이언트는 "만료된 Access Token"과 "유효한 Refresh Token"을 함께 전송합니다.
+     * 서버는 만료된 Access Token이 누구의 것인지 식별하기 위해 이 메서드를 사용하여 식별자(Email)를 꺼냅니다.
+     * <p>
+     * <b>보안 주의사항:</b> 이 메서드로 얻은 정보만으로 인증을 수행하면 안 됩니다.
+     * 반드시 이후 로직에서 DB/Redis에 저장된 <b>Refresh Token의 유효성</b>을 검증해야 합니다.
      */
     public String getSubjectFromExpiredToken(String token) {
         try {

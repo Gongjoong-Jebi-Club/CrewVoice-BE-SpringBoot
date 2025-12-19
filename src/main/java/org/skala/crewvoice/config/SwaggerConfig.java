@@ -13,6 +13,23 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
+/**
+ * Swagger (OpenAPI) 설정 클래스.
+ * <p>
+ * 이 클래스는 SpringDoc OpenAPI 라이브러리를 사용하여 API 문서를 생성하고 설정합니다.
+ * 주요 설정 내용:
+ * <ul>
+ *     <li><b>OpenAPI Info:</b> API 제목, 설명, 버전, 연락처, 라이선스 정보 설정</li>
+ *     <li><b>Servers:</b> 운영(Production) 및 로컬(Local) 서버 URL 설정</li>
+ *     <li><b>Security:</b> JWT 인증을 위한 'Bearer Authentication' 스키마 설정</li>
+ * </ul>
+ * <p>
+ * 접속 주소:
+ * <ul>
+ *     <li>UI: /swagger-ui/index.html</li>
+ *     <li>JSON: /v3/api-docs</li>
+ * </ul>
+ */
 @Configuration
 public class SwaggerConfig {
 

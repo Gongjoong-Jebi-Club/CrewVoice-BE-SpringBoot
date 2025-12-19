@@ -25,6 +25,15 @@ import java.util.stream.Collectors;
 
 /**
  * 평가(시험) 비즈니스 로직 처리 서비스
+ * <p>
+ * <b>평가 라이프사이클 (Evaluation Lifecycle):</b>
+ * <ol>
+ *     <li><b>생성 (Create):</b> 관리자가 평가를 생성합니다. (가중치 설정, 기간 설정 등)</li>
+ *     <li><b>배정 (Assign):</b> 평가 생성 시 {@link EvaluationTargetService}를 통해 자격이 있는(Active CREW) 사용자들에게 자동 배정됩니다.</li>
+ *     <li><b>제출 (Submission):</b> 사용자가 오디오를 업로드하면 Submission 레코드가 생성됩니다.</li>
+ *     <li><b>평가 요청 (Async Request):</b> {@code startEvaluationAsync} 메서드가 비동기로 실행되어, S3 Pre-signed URL 생성 후 외부 AI 엔진(FastAPI)으로 분석을 요청합니다.</li>
+ *     <li><b>결과 수신 (Callback):</b> AI 엔진 분석 완료 후 {@code handleCallback}을 통해 점수가 수신되고 DB에 저장됩니다.</li>
+ * </ol>
  */
 @Slf4j
 @Service

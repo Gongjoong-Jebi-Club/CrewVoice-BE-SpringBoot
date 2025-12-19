@@ -35,7 +35,9 @@ public class UserController {
     })
     @GetMapping
     public ResponseEntity<ApiResponse<List<UserResponse>>> searchUsers(
+            @io.swagger.v3.oas.annotations.Parameter(description = "검색 키워드 (이름, 사번, 이메일 중 하나)", example = "김승무")
             @RequestParam(required = false) String keyword,
+            @io.swagger.v3.oas.annotations.Parameter(description = "사용자 역할 (ADMIN, MANAGER, CREW)", example = "CREW")
             @RequestParam(required = false) String role) {
         List<UserResponse> users = userService.searchUsers(keyword, role);
         ApiResponse<List<UserResponse>> apiResponse = ApiResponse.success(users);
